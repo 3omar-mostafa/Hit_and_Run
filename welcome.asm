@@ -6,6 +6,8 @@
 .386 ; sets the instruction set of 80386 prosessor
 .DATA
 
+message DB 'Press any key to Continue','$'
+
 ; shows the effect of drawing letters on the screen
 letterDrawingSpeed DB 60 ; MIN value is 1
 
@@ -33,6 +35,9 @@ start_y3 EQU 100
 start_x4 EQU 140
 start_y4 EQU 110
 
+; for Press any key to Continue
+start_x5 EQU 47
+start_y5 EQU 150
 
 ; These are External PROCs in draw.asm
 ; The linker will join them
@@ -49,6 +54,7 @@ PUBLIC letterDrawingSpeed
 
 INCLUDE colors.inc
 INCLUDE alphabet.inc
+INCLUDE inout.inc
 
 .CODE
 
@@ -80,6 +86,11 @@ displayWelcomeScreen PROC
     draw_R 	color_blue		start_x3+30*lineWidthL 		start_y3	lineWidthL
     draw_U 	color_blue		start_x3+36*lineWidthL 		start_y3	lineWidthL
     draw_N 	color_blue		start_x3+42*lineWidthL 		start_y3	lineWidthL
+    
+	callsetCursorPosition start_x5  start_y5
+	callDisplayString message
+    callWaitForAnyKey
+
 
 	RET
 displayWelcomeScreen ENDP
