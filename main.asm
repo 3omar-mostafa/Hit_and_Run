@@ -3,6 +3,8 @@
 .Stack 64
 .Data
 
+INCLUDE inout.inc
+
 ; This is an external PROC that is defined in welcome.asm
 ; The linker will join them
 EXTRN displayWelcomeScreen:NEAR
@@ -12,13 +14,13 @@ MAIN PROC FAR
 
 	CALL initializeDataSegment
 	
-	CALL switchToGraphicsMode
+	callSwitchToGraphicsMode
 
 	CALL displayWelcomeScreen
 	
 	; Press any key to exit
-	CALL waitForAnyKey
-	CALL switchToTextMode
+	callWaitForAnyKey
+	callSwitchToTextMode
 	CALL exit
     
 MAIN ENDP
@@ -32,52 +34,12 @@ initializeDataSegment PROC
 	RET
 initializeDataSegment ENDP
 
+
 exit PROC
     ; return control to operating system
     MOV AH , 4ch
     INT 21H
 exit ENDP
 
-
-
-; @Returns Pressed key  scancode -> AH
-; @Returns Pressed key ASCIIcode -> AL
-waitForAnyKey PROC
-
-
-    MOV AH , 0
-    INT 16h
-    
-	RET
-waitForAnyKey ENDP
-
-
-
-switchToTextMode PROC
-	PUSH AX
-	
-    MOV AH,0          
-    MOV AL,03h
-    INT 10h 
-	
-	POP AX
-	
-	RET
-switchToTextMode ENDP
-
-
-
-switchToGraphicsMode PROC
-	PUSH AX
-	
-    MOV AH, 0
-    MOV AL, 13h
-    INT 10h
-
-	
-	POP AX
-	
-	RET
-switchToGraphicsMode ENDP
 
 END MAIN
