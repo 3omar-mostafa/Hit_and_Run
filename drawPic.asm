@@ -8,12 +8,15 @@ blockHeight EQU 16
 screenWidth EQU 320
 screenHeight EQU 200
 
-arenaHeight EQU 144
-arenaWidth EQU 320
+arenaX1 EQU 0
+arenaY1 EQU 16
+
+arenaX2 EQU 320
+arenaY2 EQU 160
 
 backgroundColor EQU 02h
 
-blockFilename DB 'block', 0
+blockFilename DB 'bomer', 0
 
 blockFilehandle DW ?
 
@@ -44,130 +47,130 @@ drawLoop4:
     MOV AL,backgroundColor
     INT 10h 
     INC CX
-    CMP CX,arenaWidth
+    CMP CX,arenaX2
 JNE drawLoop4
 	
     MOV CX , 0
     INC DX
-    CMP DX , arenaHeight
+    CMP DX , arenaY2
 JNE drawLoop4
 
 	
 	
 	
-;    LEA BX , blockData ; BL contains index at the current drawn pixel
-;	
-;    MOV CX,0
-;    MOV DX,blockHeight
-;	MOV DI,blockWidth
-;	MOV SI, 0
-;    MOV AH,0ch
-;	
-;	
-;; Drawing loop
-;drawLoop:
-;    MOV AL,[BX]
-;    INT 10h 
-;    INC CX
-;    INC BX
-;    CMP CX,DI
-;JNE drawLoop 
-;	
-;    MOV CX , SI
-;    INC DX
-;    CMP DX , 2*blockHeight
-;JNE drawLoop
-;
-;ADD SI , blockWidth
-;ADD DI , blockWidth
-;lea bx , blockData
-;mov dx , blockHeight
-;cmp cx , screenWidth
-;jne drawLoop
-;
-;
-;    LEA BX , blockData ; BL contains index at the current drawn pixel
-;	
-;    MOV CX,0
-;    MOV DX,arenaHeight - blockHeight
-;	MOV DI,blockWidth
-;	MOV SI, 0
-;    MOV AH,0ch
-;	
-;; Drawing loop
-;drawLoop1:
-;    MOV AL,[BX]
-;    INT 10h 
-;    INC CX
-;    INC BX
-;    CMP CX,DI
-;JNE drawLoop1 
-;	
-;    MOV CX , SI
-;    INC DX
-;    CMP DX , arenaHeight
-;JNE drawLoop1
-;
-;ADD SI , blockWidth
-;ADD DI , blockWidth
-;lea bx , blockData
-;mov dx , arenaHeight - blockHeight
-;cmp cx , screenWidth
-;jne drawLoop1
-;
-;
-;
-;
-;
-;    LEA BX , blockData ; BL contains index at the current drawn pixel
-;    MOV CX,0
-;    MOV DX,blockHeight
-;	MOV DI,2*blockHeight
-;    MOV AH,0ch
-;
-;; Drawing loop
-;drawLoop2:
-;    MOV AL,[BX]
-;    INT 10h 
-;    INC CX
-;    INC BX
-;    CMP CX,blockWidth
-;JNE drawLoop2
-;    MOV CX , 0
-;    INC DX
-;    CMP DX , DI
-;JNE drawLoop2
-;ADD DI , blockHeight
-;lea bx , blockData
-;cmp DX , arenaHeight-blockHeight
-;JNE drawLoop2
-;
-;
-;
-;
-;
-;    LEA BX , blockData ; BL contains index at the current drawn pixel
-;    MOV CX,arenaWidth-blockWidth
-;    MOV DX,blockHeight
-;	MOV DI,2*blockHeight
-;    MOV AH,0ch
-;
-;; Drawing loop
-;drawLoop3:
-;    MOV AL,[BX]
-;    INT 10h 
-;    INC CX
-;    INC BX
-;    CMP CX,arenaWidth
-;JNE drawLoop3
-;    MOV CX , arenaWidth-blockWidth
-;    INC DX
-;    CMP DX , DI
-;JNE drawLoop3
-;ADD DI , blockHeight
-;lea bx , blockData
-;cmp DX , arenaHeight-blockHeight
-;JNE drawLoop3
+    LEA BX , blockData ; BL contains index at the current drawn pixel
+	
+    MOV CX,arenaX1
+    MOV DX,blockHeight
+	MOV DI,blockWidth
+	MOV SI, arenaX1
+    MOV AH,0ch
+	
+	
+; Drawing loop
+drawLoop:
+    MOV AL,[BX]
+    INT 10h 
+    INC CX
+    INC BX
+    CMP CX,DI
+JNE drawLoop 
+	
+    MOV CX , SI
+    INC DX
+    CMP DX , 2*blockHeight
+JNE drawLoop
+
+ADD SI , blockWidth
+ADD DI , blockWidth
+lea bx , blockData
+mov dx , blockHeight
+cmp cx , arenaX2
+jne drawLoop
+
+
+    LEA BX , blockData ; BL contains index at the current drawn pixel
+	
+    MOV CX,0
+    MOV DX,arenaY1 + blockHeight
+	MOV DI,blockWidth
+	MOV SI, 0
+    MOV AH,0ch
+	
+; Drawing loop
+drawLoop1:
+    MOV AL,[BX]
+    INT 10h 
+    INC CX
+    INC BX
+    CMP CX,DI
+JNE drawLoop1 
+	
+    MOV CX , SI
+    INC DX
+    CMP DX , arenaY2
+JNE drawLoop1
+
+ADD SI , blockWidth
+ADD DI , blockWidth
+lea bx , blockData
+mov dx , arenaY2 - blockHeight
+cmp cx , screenWidth
+jne drawLoop1
+
+
+
+
+
+    LEA BX , blockData ; BL contains index at the current drawn pixel
+    MOV CX,0
+    MOV DX,arenaY1 + blockHeight
+	MOV DI,arenaY1 + 2*blockHeight
+    MOV AH,0ch
+
+; Drawing loop
+drawLoop2:
+    MOV AL,[BX]
+    INT 10h 
+    INC CX
+    INC BX
+    CMP CX,blockWidth
+JNE drawLoop2
+    MOV CX , 0
+    INC DX
+    CMP DX , DI
+JNE drawLoop2
+ADD DI , blockHeight
+lea bx , blockData
+cmp DX , arenaY2-blockHeight
+JNE drawLoop2
+
+
+
+
+
+    LEA BX , blockData ; BL contains index at the current drawn pixel
+    MOV CX,arenaX2-blockWidth
+    MOV DX, arenaY1 +blockHeight
+	MOV DI, arenaY1 + 2*blockHeight
+    MOV AH,0ch
+
+; Drawing loop
+drawLoop3:
+    MOV AL,[BX]
+    INT 10h 
+    INC CX
+    INC BX
+    CMP CX,arenaX2
+JNE drawLoop3
+    MOV CX , arenaX2-blockWidth
+    INC DX
+    CMP DX , DI
+JNE drawLoop3
+ADD DI , blockHeight
+lea bx , blockData
+cmp DX , arenaY2-blockHeight
+JNE drawLoop3
 
 
 
