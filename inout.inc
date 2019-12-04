@@ -11,6 +11,10 @@ EXTRN waitForAnyKey:NEAR
 EXTRN displayString:NEAR
 EXTRN switchToTextMode:NEAR
 EXTRN switchToGraphicsMode:NEAR
+EXTRN openFile:NEAR
+EXTRN loadData:NEAR
+EXTRN closeFile:NEAR
+
 
 callSetCursorPosition MACRO x , y
 	PUSH DX
@@ -80,3 +84,47 @@ callSwitchToGraphicsMode MACRO
 	
 	POP AX
 ENDM callSwitchToGraphicsMode
+
+
+; open file from the device with filename
+; @ returns the output pointer to this file in fieHandle
+callOpenFile MACRO filenamea , fileHandlea
+	; Open file
+
+    MOV AH, 3Dh
+    MOV AL, 0 ; read only
+    LEA DX, Filenamea
+    INT 21h
+    
+    ; you should check carry flag to make sure it worked correctly
+    ; carry = 0 -> successful , file handle -> AX
+    ; carry = 1 -> failed , AX -> error code
+     
+    MOV [Filehandlea], AX
+    
+
+ENDM callOpenFile
+
+
+
+; Loads data from image with its filehandle and save them in imageData
+; dimensions of the image is _width , _height
+; imageData is assumed an array with available space to store the data 
+callLoadData MACRO filehandleb , imageData , _width , _height
+	MOV AH,3Fh
+    MOV BX, [Filehandleb]
+    MOV CX,_width*_height ; number of bytes to read
+    LEA DX, imageData
+    INT 21h
+
+ENDM callLoadData 
+
+
+; Closes the opened file with its coresponding fieHandle
+callCloseFile MACRO filehandle 
+	MOV AH, 3Eh
+	MOV BX, [Filehandle]
+
+	INT 21h
+ 
+ENDM callCloseFile

@@ -17,6 +17,9 @@ PUBLIC waitForAnyKey
 PUBLIC displayString
 PUBLIC switchToTextMode
 PUBLIC switchToGraphicsMode
+PUBLIC openFile
+PUBLIC loadData
+PUBLIC closeFile
 
 
 setCursorPosition PROC
@@ -89,6 +92,53 @@ switchToGraphicsMode PROC
 	
 	RET
 switchToGraphicsMode ENDP
+
+
+openFile PROC 
+
+	;Parameters
+	;DX -> filename
+	;SI -> fieHandle
+
+    MOV AH, 3Dh
+    MOV AL, 0 ; read only
+    INT 21h
+    
+    ; you should check carry flag to make sure it worked correctly
+    ; carry = 0 -> successful , file handle -> AX
+    ; carry = 1 -> failed , AX -> error code
+     
+    MOV [SI], AX
+    
+    RET
+
+openFile ENDP
+
+loadData PROC
+
+	;Parameters
+	; SI -> fieHandle
+	; CX -> number of bytes to read
+	; DX -> imageData (where to save the data we get from the file)
+
+    MOV AH,3Fh
+    MOV BX, SI
+    INT 21h
+    RET
+loadData ENDP 
+
+
+closeFile PROC
+	
+	;Parameters
+    ;SI -> fieHandle
+	
+	MOV AH, 3Eh
+	MOV BX, [SI]
+
+	INT 21h
+	RET
+closeFile ENDP
 
 
 END
