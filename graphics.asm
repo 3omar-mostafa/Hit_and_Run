@@ -3,7 +3,7 @@
 .Data
 include inout.inc
 
-
+y_old DW ?
 gridWidth EQU 320
 gridHeight EQU 144
 
@@ -18,8 +18,8 @@ bomerFilename DB 'bomer.img', 0
 bomerFilehandle DW ?
 bomerData DB bomerWidth*bomerHeight dup(2)
 
-bomerx EQU 16
-bomerY EQU 32
+bomberx DW 16
+bomberY DW 32
 
 X EQU 'X'
 B EQU 1
@@ -57,6 +57,37 @@ MAIN PROC FAR
   MOV AL, 13h
   INT 10h
 	
+	
+	
+	
+	clearBlock MACRO x , y
+local sketch
+
+	MOV CX,x
+        MOV DX,y
+	MOV DI,x
+	MOV SI, y
+	ADD DI , 16
+	ADD SI , 16
+    MOV AH,0ch
+	
+	
+; Drawing loop
+sketch:
+    MOV AL,02h
+    INT 10h 
+    INC CX
+    CMP CX,DI
+JNE sketch 
+	
+    MOV CX , x
+    INC DX
+    CMP DX , SI
+JNE sketch
+
+ENDM clearBlock
+
+
 	
 drawpic macro x,y,imageData
 
@@ -114,13 +145,13 @@ JNE drawLoop
 	callLoadData bomerFilehandle,bomerData,bomerWidth,bomerHeight
 	callCloseFile bomerFilehandle
 
-	drawpic bomerx,bomery,bomerData
+	drawpic bomberx,bomberY,bomerData
 
 	
 	;LEA BX , bomerData ; BL contains index at the current drawn pixel
 	;
-  ;MOV CX,bomerx ; x1
-  ;MOV DX,bomery ; y1
+  ;MOV CX,bomberx ; x1
+  ;MOV DX,bomberY ; y1
   ;MOV AH,0ch
 	;
 	;
@@ -131,16 +162,21 @@ JNE drawLoop
 ;  INT 10h 
 ;  INC CX
 ;  INC BX
-;  CMP CX,16+bomerx 
+;  CMP CX,16+bomberx 
 ;JNE drawLoop1 
 ;	
-;  MOV CX , bomerx
+;  MOV CX , bomberx
 ;  INC DX
-;  CMP DX , 16+bomerx
+;  CMP DX , 16+bomberx
 ;JNE drawLoop1
 ;
 ;
-
+	
+	___label:
+	
+	call checkkeypressed
+	
+	jmp ___label
 
   ; Press any key to exit
   MOV AH , 0
@@ -182,6 +218,57 @@ JNE drawLoop1
   RET
 drawpixel endp
 
+
+
+checkkeypressed PROC 
+                mov ah , 0
+                int 16h
+                cmp ah , 72
+                jz isup
+                cmp ah , 80
+                jz isdown
+                cmp ah , 77
+                jz tempright
+                cmp ah , 75
+                jz temp2
+                ;cmp ah , 57
+                ;call drawbomb
+                jmp tempfinish1
+                
+isup:
+mov ax , bomberY
+mov y_old , ax
+sub bomberY , 4
+clearblock bomberX , y_old
+drawpic bomberx,bomberY,bomerData
+jmp finish
+temp2: jmp temp
+tempright: jmp isright
+isdown:
+mov ax , bomberY
+mov y_old , ax
+add bomberY , 4
+clearblock bomberX , y_old
+drawpic bomberx,bomberY,bomerData
+jmp finish
+tempfinish1: jmp tempfinish2
+temp: jmp isleft
+isright:
+mov ax , bomberX
+mov y_old , ax
+ add bomberX , 4
+clearblock y_old , bomberY
+drawpic bomberx,bomberY,bomerData
+jmp finish
+tempfinish2: jmp finish
+isleft: 
+mov ax , bomberX
+mov y_old , ax
+sub bomberX , 4
+clearblock y_old , bomberY
+drawpic bomberx,bomberY,bomerData
+finish:            RET
+checkkeypressed ENDP
 
 
 END MAIN
