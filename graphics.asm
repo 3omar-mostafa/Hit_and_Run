@@ -1,4 +1,5 @@
 .Model COMPACT
+.386
 .Stack 64
 .Data
 include inout.inc
@@ -14,6 +15,8 @@ gridData DB gridWidth*gridHeight dup(2)
 bomerWidth EQU 16
 bomerHeight EQU 16
 
+comma db '  ,  ','$'
+
 bomerFilename DB 'bomer.img', 0
 bomerFilehandle DW ?
 bomerData DB bomerWidth*bomerHeight dup(2)
@@ -21,8 +24,9 @@ bomerData DB bomerWidth*bomerHeight dup(2)
 bomberx DW 16
 bomberY DW 32
 
-X EQU 'X'
-B EQU 1
+; set bit in Most signeficant bit refers to block (forbidden movement)
+X EQU 10000000b ;128
+B EQU 10000001b ;129
 G EQU 0
 P EQU 'P'
 Q EQU 'Q'
@@ -34,7 +38,7 @@ H EQU 8
 C_B EQU C or B
 H_B EQU C or B
 
-;  	 0 	  1	   2 	    3		 4 	    5 	   6 	    7 	   8 	    9 	 10 	  11 	   12 	  13		 14		  15		 16		  17		 18   19
+;  	    0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19
 grid DB X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X
 	 DB X , G , G , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , X                                                                  
 	 DB X , G , X , B , X , G , X , B , X , G , G , X , B , X , G , X , B , X , G , X           
@@ -57,9 +61,7 @@ MAIN PROC FAR
   MOV AL, 13h
   INT 10h
 	
-	
-	
-	
+	 
 	clearBlock MACRO x , y
 local sketch
 
@@ -148,30 +150,7 @@ JNE drawLoop
 	drawpic bomberx,bomberY,bomerData
 
 	
-	;LEA BX , bomerData ; BL contains index at the current drawn pixel
-	;
-  ;MOV CX,bomberx ; x1
-  ;MOV DX,bomberY ; y1
-  ;MOV AH,0ch
-	;
-	;
-; Drawing loop
-;drawLoop1:
-;
-;  MOV AL,[BX]
-;  INT 10h 
-;  INC CX
-;  INC BX
-;  CMP CX,16+bomberx 
-;JNE drawLoop1 
-;	
-;  MOV CX , bomberx
-;  INC DX
-;  CMP DX , 16+bomberx
-;JNE drawLoop1
-;
-;
-	
+	LEA bp , grid	
 	___label:
 	
 	call checkkeypressed
@@ -197,22 +176,22 @@ MAIN ENDP
 
 
 drawpixel proc
-  MOV AH,0ch
+	MOV AH,0ch
 	add si,16
 	add di,16
 ; Drawing loop
-drawLoop1:
+	drawLoop1:
 
-  MOV AL,[BX]
-  INT 10h 
-  INC CX
-  INC BX
-  CMP CX,si 
+	MOV AL,[BX]
+	INT 10h 
+	INC CX
+	INC BX
+	CMP CX,si 
 JNE drawLoop1 
 	
-  MOV CX , bp
-  INC DX
-  CMP DX , di
+	MOV CX , bp
+	INC DX
+	CMP DX , di
 JNE drawLoop1
 
   RET
@@ -221,55 +200,123 @@ drawpixel endp
 
 
 checkkeypressed PROC 
-                mov ah , 0
-                int 16h
-                cmp ah , 72
-                jz isup
-                cmp ah , 80
-                jz isdown
-                cmp ah , 77
-                jz tempright
-                cmp ah , 75
-                jz temp2
-                ;cmp ah , 57
-                ;call drawbomb
-                jmp tempfinish1
+            mov ah , 0
+            int 16h
+            cmp ah , 72
+            jz isup
+            cmp ah , 80
+            jz isdown
+            cmp ah , 77
+            jz tempright
+            cmp ah , 75
+            jz temp2
+            ;cmp ah , 57
+            ;call drawbomb
+            jmp tempfinish1
                 
 isup:
-mov ax , bomberY
-mov y_old , ax
-sub bomberY , 4
-clearblock bomberX , y_old
-drawpic bomberx,bomberY,bomerData
-jmp finish
-temp2: jmp temp
-tempright: jmp isright
+			mov ax , bomberY
+			mov y_old , ax
+			
+			mov ax , bomberY
+			mov bx , bomberX
+			sub ax , 16
+			call find1Darray 
+			mov dl , DS:[BP][di]
+			shl dl ,1      ;shift to check if it's a block or brick
+			jc temp3    ;don't draw
+			
+			sub bomberY , 16
+			
+			clearblock bomberX , y_old
+			drawpic bomberx,bomberY,bomerData
+temp3:
+			jmp finish
+temp2: 		jmp temp
+tempright:  jmp isright
 isdown:
-mov ax , bomberY
-mov y_old , ax
-add bomberY , 4
-clearblock bomberX , y_old
-drawpic bomberx,bomberY,bomerData
-jmp finish
-tempfinish1: jmp tempfinish2
-temp: jmp isleft
+			mov ax , bomberY
+			mov y_old , ax
+			
+			mov ax , bomberY
+			mov bx , bomberX
+			add ax , 16
+			call find1Darray
+			mov dl , DS:[BP][di]
+			shl dl,1
+			jc temp4
+			
+			add bomberY , 16
+			
+			clearblock bomberX , y_old
+			drawpic bomberx,bomberY,bomerData
+temp4:
+			jmp finish
+tempfinish1:jmp tempfinish2
+temp: 		jmp isleft
 isright:
-mov ax , bomberX
-mov y_old , ax
- add bomberX , 4
-clearblock y_old , bomberY
-drawpic bomberx,bomberY,bomerData
-jmp finish
-tempfinish2: jmp finish
+			mov ax , bomberX
+			mov y_old , ax
+			
+			mov ax , bomberY
+			mov bx , bomberX
+			add bx , 16
+			call find1Darray
+			mov dl , DS:[BP][di]
+			shl dl,1
+			jc temp5
+			add bomberX , 16
+			
+			clearblock y_old , bomberY
+			drawpic bomberx,bomberY,bomerData
+temp5:			
+			jmp finish
+tempfinish2:jmp finish
 isleft: 
-mov ax , bomberX
-mov y_old , ax
-sub bomberX , 4
-clearblock y_old , bomberY
-drawpic bomberx,bomberY,bomerData
-finish:            RET
+			mov ax , bomberX
+			mov y_old , ax
+			
+			mov ax , bomberY
+			mov bx , bomberX
+			sub bx , 16
+			call find1Darray
+			mov dl , DS:[BP][di]
+			shl dl,1
+			jc finish
+			sub bomberX , 16
+			
+			clearblock y_old , bomberY
+			drawpic bomberx,bomberY,bomerData
+finish:            
+			RET
 checkkeypressed ENDP
 
+find1Darray PROC
+            ;sub al , 16  ;Y
+            INC AX
+            INC BX
+
+			shr ax , 1
+			shr ax , 1
+			shr ax , 1
+			shr ax , 1
+			
+			shr  bx , 1
+			shr  bx , 1
+			shr  bx , 1
+			shr  bx , 1
+			             
+			DEC AX
+			   
+			             
+            mov cx , 20 ; 320/16
+            mul cx
+            add ax , bx;bx = y
+
+            mov di , ax
+			
+            RET
+find1Darray ENDP
 
 END MAIN
 
