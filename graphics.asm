@@ -3,7 +3,6 @@
 .Stack 64
 .Data
 include inout.inc
-
 y_old DW ?
 gridWidth EQU 320
 gridHeight EQU 144
@@ -183,7 +182,10 @@ callOpenFile bombFilename,bombFilehandle
 	callCloseFile bomerFilehandle
 
 	drawpic bomberx,bomberY,bomerData
-
+    writescore1 0000
+	writescore2 0000
+	writeheart1 3
+	writeheart2 3
 	
 	LEA bp , grid	
 	___label:

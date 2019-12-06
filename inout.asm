@@ -22,6 +22,7 @@ PUBLIC loadData
 PUBLIC closeFile
 
 
+
 setCursorPosition PROC
 	
 	; Parameters :

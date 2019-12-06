@@ -1,0 +1,16 @@
+Microsoft (R) Macro Assembler Version 5.10 
+Copyright (C) Microsoft Corp 1981, 1988.  All rights reserved.
+
+graphics.asm(185): warning A4057: Illegal size for operand
+graphics.asm(186): warning A4057: Illegal size for operand
+graphics.asm(187): warning A4057: Illegal size for operand
+graphics.asm(188): warning A4057: Illegal size for operand
+
+    666 Source  Lines
+   1093 Total   Lines
+    115 Symbols
+
+  49704 + 435023 Bytes symbol space free
+
+      4 Warning Errors
+      0 Severe  Errors

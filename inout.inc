@@ -16,8 +16,78 @@ EXTRN loadData:NEAR
 EXTRN closeFile:NEAR
 
 
+writescore1 macro score
+           pusha
+           ;;;set cursor;;;
+           MOV DH , 00
+           MOV DL , 2H
+           MOV BH , 0
+           MOV AH , 2
+           INT 10h
+           ;;;;;;;;;;;;;
+           mov ah , 2
+           mov dl , ':'
+           int 21h
+           ;;;;;;;;;;;;
+		   mov ax , score
+           printnum ax
+           popa
+ENDM       writescore
+
+writescore2 macro score
+           pusha
+           ;;;set cursor;;;
+           MOV DH , 00
+           MOV DL , 19H
+           MOV BH , 0
+           MOV AH , 2
+           INT 10h
+           ;;;;;;;;;;;;;
+           mov ah , 2
+           mov dl , ':'
+           int 21h
+           ;;;;;;;;;;;;
+		   mov ax , score
+           printnum ax
+           popa
+ENDM       writescore
 
 
+writeheart1 macro heart
+           pusha
+           ;;;set cursor;;;
+           MOV DH , 00
+           MOV DL , 0ch
+           MOV BH , 0
+           MOV AH , 2
+           INT 10h
+           ;;;;;;;;;;;;;
+           mov ah , 2
+           mov dl , ':'
+           int 21h
+           ;;;;;;;;;;;;
+		   mov ax , heart
+           printnum ax
+           popa
+ENDM       writescore
+
+writeheart2 macro heart
+           pusha
+           ;;;set cursor;;;
+           MOV DH , 00
+           MOV DL , 26h
+           MOV BH , 0
+           MOV AH , 2
+           INT 10h
+           ;;;;;;;;;;;;;
+           mov ah , 2
+           mov dl , ':'
+           int 21h
+           ;;;;;;;;;;;;
+		   mov ax , heart
+           printnum ax
+           popa
+ENDM       writescore
 
 GetCurrentTime macro time
             pusha
