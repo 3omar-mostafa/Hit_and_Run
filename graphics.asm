@@ -55,7 +55,6 @@ grid DB X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , 
 	 DB X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X
 
 
-
 .Code
 
 
@@ -72,13 +71,12 @@ MAIN PROC FAR
 		bombx dw 0
 		bomby dw 0
 		to_be_drawn db 0
-		start_time db ?
+		counter db 0
 	 bomb ends
 	 
 	 bomb1 bomb<>
-	 bomb2 bomb<>
 	 
-	clearBlock MACRO x , y
+clearBlock MACRO x , y
 local sketch
 
 	MOV CX,x
@@ -173,6 +171,7 @@ callOpenFile bombFilename,bombFilehandle
 	
 	call checkkeypressed
 	
+	
 	jmp ___label
 
   ; Press any key to exit
@@ -229,10 +228,7 @@ checkkeypressed PROC
             cmp ah , 75
             jz temp2
             cmp ah , 57
-			mov bomb1.bombx , bomberx
-			mov bomb1.bomby , bombery
-			;put start time
-			mov bomb1.to_be_drawn , 1
+			jz space
             jmp tempfinish1
                 
 isup:
@@ -250,14 +246,19 @@ isup:
 			sub bomberY , 16
 			
 			
+			
 			cmp bomb1.to_be_drawn,1
 			jne nodraw
 			drawpic bomb1.bombx , bomb1.bomby , bombData
 			mov bomb1.to_be_drawn ,0
-	nodraw:
+	
+			drawpic bomberx,bomberY,bomerData
+			jmp finish
 			
+nodraw:
 			clearblock bomberX , y_old
 			drawpic bomberx,bomberY,bomerData
+			
 temp3:
 			jmp finish
 temp2: 		jmp temp
@@ -276,12 +277,16 @@ isdown:
 			
 			add bomberY , 16
 			
+			
 			cmp bomb1.to_be_drawn,1
 			jne nodraw1
 			drawpic bomb1.bombx , bomb1.bomby , bombData
 			mov bomb1.to_be_drawn ,0
-	nodraw1:
-			mov bomb1.to_be_drawn ,0
+			
+			drawpic bomberx,bomberY,bomerData
+			jmp finish
+nodraw1:
+			
 			clearblock bomberX , y_old
 			drawpic bomberx,bomberY,bomerData
 temp4:
@@ -301,13 +306,17 @@ isright:
 			jc temp5
 			add bomberX , 16
 			
+			
 			cmp bomb1.to_be_drawn,1
 			jne nodraw3
 			drawpic bomb1.bombx , bomb1.bomby , bombData
 			mov bomb1.to_be_drawn ,0
-	nodraw3:
 			
-			mov bomb1.to_be_drawn ,0
+			drawpic bomberx,bomberY,bomerData
+			jmp finish
+nodraw3:
+			
+		
 			clearblock y_old , bomberY
 			drawpic bomberx,bomberY,bomerData
 temp5:			
@@ -326,15 +335,31 @@ isleft:
 			jc finish
 			sub bomberX , 16
 			
+			
 			cmp bomb1.to_be_drawn,1
 			jne nodraw4
 			drawpic bomb1.bombx , bomb1.bomby , bombData
 			mov bomb1.to_be_drawn ,0
-	nodraw4:
 			
-			mov bomb1.to_be_drawn ,0
+			drawpic bomberx,bomberY,bomerData
+			jmp finish
+nodraw4:
+			
+			
 			clearblock y_old , bomberY
 			drawpic bomberx,bomberY,bomerData
+			jmp finish
+space:			
+            mov ax, bomberx
+			mov bomb1.bombx , ax
+			mov ax, bombery
+			mov bomb1.bomby , ax
+			;GetCurrentTime bomb1.to_be_drawn
+			mov bomb1.to_be_drawn , 1
+			
+			
+			
+			
 finish:            
 			RET
 checkkeypressed ENDP
