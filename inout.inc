@@ -19,6 +19,18 @@ EXTRN closeFile:NEAR
 
 
 
+GetCurrentTime macro time
+            pusha
+			
+            mov ah , 2ch
+            int 21h
+			mov time , dh
+			
+			popa
+            
+            
+endm GetCurrentTime 
+
 
 
 callSetCursorPosition MACRO x , y
@@ -134,11 +146,12 @@ callCloseFile MACRO filehandle
  
 ENDM callCloseFile
 
-num MACRO inputdata ; inputdata is assumed as Word variable
+
+
+printnum MACRO inputdata ; inputdata is assumed as Word variable
     LOCAL start , print ; MUST be at the 2nd line , DO NOT LEAVE EMPTY LINE
  
- pusha
-    MOV AX , inputdata
+    MOVzx AX , inputdata
     MOV CX , 0
     MOV DX , 0
     MOV BX , 10
@@ -159,7 +172,4 @@ num MACRO inputdata ; inputdata is assumed as Word variable
         INT 21h
     LOOP print
 
-popa
-ENDM num
-
-
+ENDM printnum

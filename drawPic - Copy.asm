@@ -16,7 +16,7 @@ arenaY2 EQU 160
 
 backgroundColor EQU 02h
 
-blockFilename DB 'coin.bin', 0
+blockFilename DB 'block', 0
 
 blockFilehandle DW ?
 
@@ -58,37 +58,37 @@ JNE drawLoop4
 	
 	
 	
-    LEA BX , blockData ; BL contains index at the current drawn pixel
-	
-    MOV CX,arenaX1
-    MOV DX,blockHeight
-	MOV DI,blockWidth
-	MOV SI, arenaX1
-    MOV AH,0ch
-	
-	
-; Drawing loop
-drawLoop:
-    MOV AL,[BX]
-    INT 10h 
-    INC CX
-    INC BX
-    CMP CX,DI
-JNE drawLoop 
-	
-    MOV CX , SI
-    INC DX
-    CMP DX , 2*blockHeight
-JNE drawLoop
-
-ADD SI , blockWidth
-ADD DI , blockWidth
-lea bx , blockData
-mov dx , blockHeight
-cmp cx , arenaX2
-jne drawLoop
-
-
+;    LEA BX , blockData ; BL contains index at the current drawn pixel
+;	
+;    MOV CX,arenaX1
+;    MOV DX,blockHeight
+;	MOV DI,blockWidth
+;	MOV SI, arenaX1
+;    MOV AH,0ch
+;	
+;	
+;; Drawing loop
+;drawLoop:
+;    MOV AL,[BX]
+;    INT 10h 
+;    INC CX
+;    INC BX
+;    CMP CX,DI
+;JNE drawLoop 
+;	
+;    MOV CX , SI
+;    INC DX
+;    CMP DX , 2*blockHeight
+;JNE drawLoop
+;
+;ADD SI , blockWidth
+;ADD DI , blockWidth
+;lea bx , blockData
+;mov dx , blockHeight
+;cmp cx , arenaX2
+;jne drawLoop
+;
+;
     LEA BX , blockData ; BL contains index at the current drawn pixel
 	
     MOV CX,0
@@ -98,34 +98,34 @@ jne drawLoop
     MOV AH,0ch
 	
 ; Drawing loop
-drawLoop1:
-    MOV AL,[BX]
-    INT 10h 
-    INC CX
-    INC BX
-    CMP CX,DI
-JNE drawLoop1 
-	
-    MOV CX , SI
-    INC DX
-    CMP DX , arenaY2
-JNE drawLoop1
-
-ADD SI , blockWidth
-ADD DI , blockWidth
-lea bx , blockData
-mov dx , arenaY2 - blockHeight
-cmp cx , screenWidth
-jne drawLoop1
-
-
+;drawLoop1:
+;    MOV AL,[BX]
+;    INT 10h 
+;    INC CX
+;    INC BX
+;    CMP CX,DI
+;JNE drawLoop1 
+;	
+;    MOV CX , SI
+;    INC DX
+;    CMP DX , arenaY2
+;JNE drawLoop1
+;
+;ADD SI , blockWidth
+;ADD DI , blockWidth
+;lea bx , blockData
+;mov dx , arenaY2 - blockHeight
+;cmp cx , screenWidth
+;jne drawLoop1
+;
+;
 
 
 
     LEA BX , blockData ; BL contains index at the current drawn pixel
     MOV CX,0
-    MOV DX,arenaY1 + blockHeight
-	MOV DI,arenaY1 + 2*blockHeight
+    MOV DX, blockHeight
+	MOV DI,2*blockHeight
     MOV AH,0ch
 
 ; Drawing loop
@@ -151,8 +151,8 @@ JNE drawLoop2
 
     LEA BX , blockData ; BL contains index at the current drawn pixel
     MOV CX,arenaX2-blockWidth
-    MOV DX, arenaY1 +blockHeight
-	MOV DI, arenaY1 + 2*blockHeight
+    MOV DX,blockHeight
+	MOV DI, arenaY1 + blockHeight
     MOV AH,0ch
 
 ; Drawing loop

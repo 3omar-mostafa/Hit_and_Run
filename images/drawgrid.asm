@@ -16,11 +16,11 @@ arenaY2 EQU 160
 
 backgroundColor EQU 02h
 
-blockFilename DB 'coin.bin', 0
+blockFilename DB 'bomb.img', 0
 
 blockFilehandle DW ?
 
-blockData DB blockWidth*blockHeight dup(0)
+blockData DB blockWidth*blockHeight dup(2)
 
 .Code
 MAIN PROC FAR
@@ -33,7 +33,7 @@ MAIN PROC FAR
 	
     CALL OpenFile
     CALL ReadData
-	
+    CALL CloseFile
 	
 	
 	
@@ -60,41 +60,54 @@ JNE drawLoop4
 	
     LEA BX , blockData ; BL contains index at the current drawn pixel
 	
-    MOV CX,arenaX1
-    MOV DX,blockHeight
-	MOV DI,blockWidth
-	MOV SI, arenaX1
+    MOV CX,arenaX1 ; x1
+    MOV DX,arenaY1 ; y1
+	MOV DI,arenaX1+blockWidth ; x1 + width
+	MOV SI, arenaX1 ; x1
     MOV AH,0ch
 	
 	
 ; Drawing loop
 drawLoop:
+
     MOV AL,[BX]
     INT 10h 
     INC CX
     INC BX
-    CMP CX,DI
+    CMP CX,DI 
 JNE drawLoop 
 	
     MOV CX , SI
     INC DX
-    CMP DX , 2*blockHeight
+    CMP DX , arenaY1+blockHeight
 JNE drawLoop
 
 ADD SI , blockWidth
 ADD DI , blockWidth
 lea bx , blockData
-mov dx , blockHeight
+MOV CX , SI
+mov dx , arenaY1
 cmp cx , arenaX2
 jne drawLoop
 
 
+
+
+
+
+
+
+
+
+
+
+
     LEA BX , blockData ; BL contains index at the current drawn pixel
 	
-    MOV CX,0
-    MOV DX,arenaY1 + blockHeight
-	MOV DI,blockWidth
-	MOV SI, 0
+    MOV CX,arenaX1
+    MOV DX,arenaY2 - blockHeight
+	MOV DI,arenaX1+blockWidth
+	MOV SI, arenaX1
     MOV AH,0ch
 	
 ; Drawing loop
@@ -114,8 +127,9 @@ JNE drawLoop1
 ADD SI , blockWidth
 ADD DI , blockWidth
 lea bx , blockData
+MOV CX , SI
 mov dx , arenaY2 - blockHeight
-cmp cx , screenWidth
+cmp cx , arenaX2
 jne drawLoop1
 
 
@@ -123,7 +137,7 @@ jne drawLoop1
 
 
     LEA BX , blockData ; BL contains index at the current drawn pixel
-    MOV CX,0
+    MOV CX,arenaX1
     MOV DX,arenaY1 + blockHeight
 	MOV DI,arenaY1 + 2*blockHeight
     MOV AH,0ch
@@ -184,7 +198,7 @@ JNE drawLoop3
     MOV AH , 0
     INT 16h
     
-    call CloseFile
+
     
     ;Change to Text MODE
     MOV AH,0          

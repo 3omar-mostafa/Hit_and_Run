@@ -7,3 +7,5 @@ color_red 	 EQU 70h
 color_blue 	 EQU 09h
 color_green  EQU 60h
 color_orange EQU 5Bh
+
+backgroundColor EQU 02h

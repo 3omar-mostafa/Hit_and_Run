@@ -80,7 +80,7 @@ clearBlock MACRO x , y
 local sketch
 
 	MOV CX,x
-        MOV DX,y
+    MOV DX,y
 	MOV DI,x
 	MOV SI, y
 	ADD DI , 16
@@ -103,8 +103,23 @@ JNE sketch
 
 ENDM clearBlock
 
+updategrid macro objectx,objecty,object
+			
+			
+			pusha 
+			mov ax , objecty
+			mov bx , objectx
+			call find1Darray 
+			mov al,object
+			mov  DS:[BP][di],al
+			popa
+			
+			
 
-	
+endm updategrid	
+
+
+
 drawpic macro x,y,imageData
 
 LEA BX , imageData ; BL contains index at the current drawn pixel
@@ -122,6 +137,10 @@ LEA BX , imageData ; BL contains index at the current drawn pixel
 	pop di
   pop si
 endm drawpic 
+
+
+
+
 
 
   callOpenFile gridFilename,gridFilehandle
@@ -350,12 +369,16 @@ nodraw4:
 			drawpic bomberx,bomberY,bomerData
 			jmp finish
 space:			
+			
             mov ax, bomberx
 			mov bomb1.bombx , ax
 			mov ax, bombery
 			mov bomb1.bomby , ax
 			;GetCurrentTime bomb1.to_be_drawn
 			mov bomb1.to_be_drawn , 1
+		
+			updategrid bomberX , bomberY , B1
+			;don't forget to ubdate the grid to ground
 			
 			
 			
@@ -390,6 +413,8 @@ find1Darray PROC
 			
             RET
 find1Darray ENDP
+
+
 
 END MAIN
 
