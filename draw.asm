@@ -7,29 +7,6 @@
 .MODEL SMALL
 .STACK 64
 .386 ; sets the instruction set of 80386 prosessor
-.DATA
-
-bombFireUpStartX DW ?
-bombFireUpStartX DW ?
-bombFireUpEndX DW ?
-bombFireUpEndY DW ?
-
-bombFireDownStartX DW ?
-bombFireDownStartX DW ?
-bombFireDownEndX DW ?
-bombFireDownEndY DW ?
-
-bombFireLeftStartX DW ?
-bombFireLeftStartX DW ?
-bombFireLeftEndX DW ?
-bombFireLeftEndY DW ?
-
-bombFireRightStartX DW ?
-bombFireRightStartX DW ?
-bombFireRightEndX DW ?
-bombFireRightEndY DW ?
-
-
 .CODE
 
 ; These procedures are public
@@ -38,15 +15,11 @@ PUBLIC drawColumnUp
 PUBLIC drawColumnDown
 PUBLIC drawRowLeft
 PUBLIC drawRowRight
-PUBLIC drawFire
 
 ; These variales are external
 ; MUST be declared at another assembly file with same name,type
 ; so that the linker join them
-EXTRN bombrightData:WORD
-EXTRN bombleftData:WORD
-EXTRN bombUpData:WORD
-EXTRN bombDownData:WORD
+EXTRN letterDrawingSpeed:BYTE
 
 
 maxDrawingSpeed EQU 512000
@@ -203,22 +176,5 @@ JNE _label_drawRowRight_Loop
 
     RET
 drawRowRight ENDP
-
-
-
-; CX -> bombStartX , DX -> bombStartY
-drawFire PROC
-
-
-
-
-
-
-RET
-drawFire ENDP
-
-
-
-
 
 END
