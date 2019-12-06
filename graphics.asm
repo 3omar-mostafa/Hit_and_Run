@@ -15,7 +15,6 @@ gridData DB gridWidth*gridHeight dup(2)
 bomerWidth EQU 16
 bomerHeight EQU 16
 
-comma db '  ,  ','$'
 
 bomerFilename DB 'bomer.img', 0
 bomerFilehandle DW ?
@@ -23,6 +22,12 @@ bomerData DB bomerWidth*bomerHeight dup(2)
 
 bomberx DW 16
 bomberY DW 32
+
+bombFilename DB 'bomb.img', 0
+bombFilehandle DW ?
+bombData DB bomerWidth*bomerHeight dup(2)
+
+
 
 ; set bit in Most signeficant bit refers to block (forbidden movement)
 X EQU 10000000b ;128
@@ -49,6 +54,8 @@ grid DB X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , 
 	 DB X , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , G , G , X                                                                    
 	 DB X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X
 
+
+
 .Code
 
 
@@ -61,6 +68,15 @@ MAIN PROC FAR
   MOV AL, 13h
   INT 10h
 	
+	 bomb struc
+		bombx dw 0
+		bomby dw 0
+		to_be_drawn db 0
+		start_time db ?
+	 bomb ends
+	 
+	 bomb1 bomb<>
+	 bomb2 bomb<>
 	 
 	clearBlock MACRO x , y
 local sketch
@@ -141,7 +157,9 @@ JNE drawLoop
   CMP DX , 160
 JNE drawLoop
 
-
+callOpenFile bombFilename,bombFilehandle
+	callLoadData bombFilehandle,bombData,16,16
+	callCloseFile bombFilehandle
 ;;;;;;;;;;;;;;;;;;;;;;draw pomerman;;;;;;;;;;;;;;;;;;;;;;;;
   callOpenFile bomerFilename,bomerFilehandle
 	callLoadData bomerFilehandle,bomerData,bomerWidth,bomerHeight
@@ -210,8 +228,11 @@ checkkeypressed PROC
             jz tempright
             cmp ah , 75
             jz temp2
-            ;cmp ah , 57
-            ;call drawbomb
+            cmp ah , 57
+			mov bomb1.bombx , bomberx
+			mov bomb1.bomby , bombery
+			;put start time
+			mov bomb1.to_be_drawn , 1
             jmp tempfinish1
                 
 isup:
@@ -227,6 +248,13 @@ isup:
 			jc temp3    ;don't draw
 			
 			sub bomberY , 16
+			
+			
+			cmp bomb1.to_be_drawn,1
+			jne nodraw
+			drawpic bomb1.bombx , bomb1.bomby , bombData
+			mov bomb1.to_be_drawn ,0
+	nodraw:
 			
 			clearblock bomberX , y_old
 			drawpic bomberx,bomberY,bomerData
@@ -248,6 +276,12 @@ isdown:
 			
 			add bomberY , 16
 			
+			cmp bomb1.to_be_drawn,1
+			jne nodraw1
+			drawpic bomb1.bombx , bomb1.bomby , bombData
+			mov bomb1.to_be_drawn ,0
+	nodraw1:
+			mov bomb1.to_be_drawn ,0
 			clearblock bomberX , y_old
 			drawpic bomberx,bomberY,bomerData
 temp4:
@@ -267,6 +301,13 @@ isright:
 			jc temp5
 			add bomberX , 16
 			
+			cmp bomb1.to_be_drawn,1
+			jne nodraw3
+			drawpic bomb1.bombx , bomb1.bomby , bombData
+			mov bomb1.to_be_drawn ,0
+	nodraw3:
+			
+			mov bomb1.to_be_drawn ,0
 			clearblock y_old , bomberY
 			drawpic bomberx,bomberY,bomerData
 temp5:			
@@ -285,6 +326,13 @@ isleft:
 			jc finish
 			sub bomberX , 16
 			
+			cmp bomb1.to_be_drawn,1
+			jne nodraw4
+			drawpic bomb1.bombx , bomb1.bomby , bombData
+			mov bomb1.to_be_drawn ,0
+	nodraw4:
+			
+			mov bomb1.to_be_drawn ,0
 			clearblock y_old , bomberY
 			drawpic bomberx,bomberY,bomerData
 finish:            
