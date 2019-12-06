@@ -3,56 +3,85 @@
 .Stack 64
 .Data
 include inout.inc
-y_old DW ?
-gridWidth EQU 320
-gridHeight EQU 144
 
-gridFilename DB 'grid.img', 0
-gridFilehandle DW ?
-gridData DB gridWidth*gridHeight dup(2)
-
-bomerWidth EQU 16
-bomerHeight EQU 16
-
-
-bomerFilename DB 'bomer.img', 0
-bomerFilehandle DW ?
-bomerData DB bomerWidth*bomerHeight dup(2)
-
-bomberx DW 16
-bomberY DW 32
-
-bombFilename DB 'bomb.img', 0
-bombFilehandle DW ?
-bombData DB bomerWidth*bomerHeight dup(2)
-
-
-
-; set bit in Most signeficant bit refers to block (forbidden movement)
-X EQU 10000000b ;128
-B EQU 10000001b ;129
-G EQU 0
-P EQU 'P'
-Q EQU 'Q'
-B1 EQU 5
-B2 EQU 6
-C EQU 7
-H EQU 8
-
-C_B EQU C or B
-H_B EQU C or B
-
-;  	    0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19
-grid DB X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X
-	 DB X , G , G , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , X                                                                  
-	 DB X , G , X , B , X , G , X , B , X , G , G , X , B , X , G , X , B , X , G , X           
-	 DB X , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , X                                                                                       
-	 DB X , G , X , B , X , G , X , B , X , G , G , X , B , X , G , X , B , X , G , X                                                                                     
-	 DB X , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , X                                                               
-	 DB X , G , X , B , X , G , X , B , X , G , G , X , B , X , G , X , B , X , G , X                                                                                    
-	 DB X , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , G , G , X                                                                    
-	 DB X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X
-
+	time db ?
+	last_time db ?
+	y_old DW ?
+	gridWidth EQU 320
+	gridHeight EQU 144
+	
+	gridFilename DB 'grid.img', 0
+	gridFilehandle DW ?
+	gridData DB gridWidth*gridHeight dup(2)
+	
+	imagewidth EQU 16
+	imageheight EQU 16
+	
+	
+	bomerFilename DB 'bomer.img', 0
+	bomerFilehandle DW ?
+	bomerData DB imagewidth*imageheight dup(2)
+	
+	bomberx DW 16
+	bomberY DW 32
+	
+	bombFilename DB 'bomb.img', 0
+	bombFilehandle DW ?
+	bombData DB imagewidth*imageheight dup(2)
+	
+	
+	bombrightFilename DB 'bombrit.img', 0
+	bombrightFilehandle DW ?
+	bombrightData DB imagewidth*imageheight dup(2)
+	
+	bombleftFilename DB 'bombleft.img', 0
+	bombleftFilehandle DW ?
+	bombleftData DB imagewidth*imageheight dup(2)
+	
+	bombupFilename DB 'bombup.img', 0
+	bombupFilehandle DW ?
+	bombupData DB imagewidth*imageheight dup(2)
+	
+	bombdownFilename DB 'bombdown.img', 0
+	bombdownFilehandle DW ?
+	bombdownData DB imagewidth*imageheight dup(2)
+	
+	coinFilename DB 'coin.img', 0
+	coinFilehandle DW ?
+	coinData DB imagewidth*imageheight dup(2)
+	
+	;heartFilename DB 'bombdown.img', 0
+	;heartFilehandle DW ?
+	;heartData DB imagewidth*imageheight dup(2)
+	
+	
+	; set bit in Most signeficant bit refers to block (forbidden movement)
+	X EQU  10000000b ; 128
+	B EQU  10000001b ; 129
+	G EQU  00000000b ; 0
+	B1 EQU 10010000b ; 72
+	B2 EQU 10100000b ; 160
+	P1 EQU 00011000b ; 24
+	P2 EQU 00101000b ; 40
+	F  EQU 00001000b ; 8 -> powerup for bomb
+	C EQU  00000010b ; 2
+	H EQU  00000100b ; 4
+	
+	
+	F_B EQU F or B
+	C_B EQU C or B
+	H_B EQU H or B
+		
+		;  	    0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19
+	grid DB X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X
+		 DB X , G , G , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , X                                                                  
+		 DB X , G , X , B , X , G , X , B , X , G , G , X , B , X , G , X , B , X , G , X           
+		 DB X , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , X                                                                                       
+		 DB X , G , X , B , X , G , X , B , X , G , G , X , B , X , G , X , B , X , G , X                                                                                     
+		 DB X , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , X                                                               
+		 DB X , G , X , B , X , G , X , B , X , G , G , X , B , X , G , X , B , X , G , X                                                                                    
+		 DB X , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , G , G , X                                                                    
+		 DB X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X
 
 .Code
 
@@ -70,11 +99,13 @@ MAIN PROC FAR
 		bombx dw 0
 		bomby dw 0
 		to_be_drawn db 0
-		counter db 0
+		bomb_time db 0
+		counter db ?
 	 bomb ends
 	 
 	 bomb1 bomb<>
-	 
+
+
 clearBlock MACRO x , y
 local sketch
 
@@ -102,6 +133,8 @@ JNE sketch
 
 ENDM clearBlock
 
+
+
 updategrid macro objectx,objecty,object
 			
 			
@@ -116,6 +149,126 @@ updategrid macro objectx,objecty,object
 			
 
 endm updategrid	
+
+checkBlock MACRO x1 , y1
+local __finish , _finish , _label_G , _label_P1 , _label_P2 , _label_F , _label_C , _label_H
+call find1Darray
+
+mov cl , DS:[BP][DI]
+
+cmp cl , X
+je __finish
+
+shl cl , 1
+shr cl , 1
+shr cl , 1
+
+updategrid x1 , y1 , cl 
+	CMP cl , G  
+	JE _label_G 
+	
+	CMP cl , P1 
+	JE _label_P1
+	
+	CMP cl , P2 
+	JE _label_P2
+	
+	CMP cl , F  
+	JE _label_F 
+	
+	CMP cl , C  
+	JE _label_C 
+	
+	CMP cl , H  
+	JE _label_H
+	
+	
+	_label_G:  
+	clearBlock x1 , y1
+	JMP _finish
+	
+	; TODO to be completed
+	_label_P1: 
+	clearBlock x1 , y1
+	JMP _finish
+	
+	; TODO to be completed
+	_label_P2: 
+	clearBlock x1 , y1
+	JMP _finish
+	
+	_label_F:  
+	;
+	JMP _finish
+
+	_label_C: 
+	drawpic x1 , y1 , coinData
+	JMP _finish
+	
+	_label_H:
+	;
+	JMP _finish
+	
+_finish:
+
+__finish:
+ENDM checkBlock
+
+
+
+;checkTypeAndDraw MACRO x1 , y1 , type1
+;local _finish , _label_G , _label_P1 , _label_P2 , _label_F , _label_C , _label_H
+;
+;	CMP type1 , G  
+;	JE _label_G 
+;	
+;	CMP type1 , P1 
+;	JE _label_P1
+;	
+;	CMP type1 , P2 
+;	JE _label_P2
+;	
+;	CMP type1 , F  
+;	JE _label_F 
+;	
+;	CMP type1 , C  
+;	JE _label_C 
+;	
+;	CMP type1 , H  
+;	JE _label_H
+;	
+;	
+;	_label_G:  
+;	clearBlock x1 , y1
+;	JMP _finish
+;	
+;	; TODO to be completed
+;	_label_P1: 
+;	clearBlock x1 , y1
+;	JMP _finish
+;	
+;	; TODO to be completed
+;	_label_P2: 
+;	clearBlock x1 , y1
+;	JMP _finish
+;	
+;	_label_F:  
+;	;
+;	JMP _finish
+;
+;	_label_C: 
+;	drawpic x1 , y1 , coinData
+;	JMP _finish
+;	
+;	_label_H:
+;	;
+;	JMP _finish
+;	
+;_finish:
+;ENDM checkTypeAndDraw
+;
+
+
 
 
 
@@ -139,12 +292,7 @@ endm drawpic
 
 
 
-
-
-
-  callOpenFile gridFilename,gridFilehandle
-	callLoadData gridFilehandle,gridData,gridWidth,gridHeight
-	callCloseFile gridFilehandle
+	call loadimages
 	
 	MOV AH,0ch
 	MOV CX , 0
@@ -173,13 +321,7 @@ JNE drawLoop
   CMP DX , 160
 JNE drawLoop
 
-callOpenFile bombFilename,bombFilehandle
-	callLoadData bombFilehandle,bombData,16,16
-	callCloseFile bombFilehandle
-;;;;;;;;;;;;;;;;;;;;;;draw pomerman;;;;;;;;;;;;;;;;;;;;;;;;
-  callOpenFile bomerFilename,bomerFilehandle
-	callLoadData bomerFilehandle,bomerData,bomerWidth,bomerHeight
-	callCloseFile bomerFilehandle
+
 
 	drawpic bomberx,bomberY,bomerData
     writescore1 0000
@@ -187,13 +329,51 @@ callOpenFile bombFilename,bombFilehandle
 	writeheart1 3
 	writeheart2 3
 	
+	
 	LEA bp , grid	
 	___label:
 	
+	GetCurrentTime time
+	mov al,time
+	cmp al,last_time
+	je wait_for_bomb
+	inc bomb1.counter
+
+wait_for_bomb:
+	mov last_time,al
 	call checkkeypressed
+	
+	cmp bomb1.counter , 3
+	je explode 
+	jmp ___label
+
+explode:
+	
+	mov bomb1.counter , 5 ; 5 is any arbitrary value above 3 
+	mov ax , bomb1.bomby
+	mov bx , bomb1.bombx
+	call find1Darray
+	updategrid bomb1.bombx , bomb1.bomby , G
+	
+	PUSH BX
+	ADD BX , 16
+	checkBlock BX , AX
+	SUB BX , 32
+	checkBlock BX , AX
+	
+	POP BX
+	
+	ADD AX , 16
+	checkBlock BX , AX
+	SUB AX , 32
+	checkBlock BX , AX
 	
 	
 	jmp ___label
+
+
+
+
 
   ; Press any key to exit
   MOV AH , 0
@@ -376,7 +556,7 @@ space:
 			mov bomb1.bombx , ax
 			mov ax, bombery
 			mov bomb1.bomby , ax
-			;GetCurrentTime bomb1.to_be_drawn
+			mov bomb1.counter , 0
 			mov bomb1.to_be_drawn , 1
 		
 			updategrid bomberX , bomberY , B1
@@ -390,7 +570,7 @@ finish:
 checkkeypressed ENDP
 
 find1Darray PROC
-            ;sub al , 16  ;Y
+            ; y is AX , x is BX
             INC AX
             INC BX
 
@@ -416,6 +596,52 @@ find1Darray PROC
             RET
 find1Darray ENDP
 
+
+
+loadimages proc
+        ;;;;;;;;;;;;;;load grid;;;;;;;;;;;;;;;;
+		callOpenFile gridFilename,gridFilehandle
+		callLoadData gridFilehandle,gridData,gridWidth,gridHeight
+		callCloseFile gridFilehandle
+        ;;;;;;;;;;;;;;load bomb;;;;;;;;;;;;;;;;		
+		callOpenFile bombFilename,bombFilehandle
+		callLoadData bombFilehandle,bombData,imagewidth,imageheight
+		callCloseFile bombFilehandle
+        ;;;;;;;;;;;;;;load bomberman;;;;;;;;;;;;;;;;;;;;;;;;
+		callOpenFile bomerFilename,bomerFilehandle
+		callLoadData bomerFilehandle,bomerData,imagewidth,imageheight
+		callCloseFile bomerFilehandle
+		
+		;;;;;;;;;;;;;;;load bomb right;;;;;;;;;;;;;;;;;;;;;;;;
+		callOpenFile bombrightFilename,bombrightFilehandle
+		callLoadData bombrightFilehandle,bombrightData,imagewidth,imageheight
+		callCloseFile bombrightFilehandle
+		;;;;;;;;;;;;;;;load bomb left;;;;;;;;;;;;;;;;;;;;;;;;
+		callOpenFile bombleftFilename,bombleftFilehandle
+		callLoadData bombleftFilehandle,bombleftData,imagewidth,imageheight
+		callCloseFile bombleftFilehandle
+		;;;;;;;;;;;;;;load bomb up;;;;;;;;;;;;;;;;;;;;;;;;
+		callOpenFile bombupFilename,bombupFilehandle
+		callLoadData bombupFilehandle,bombupData,imagewidth,imageheight
+		callCloseFile bombupFilehandle
+		;;;;;;;;;;;;;;;load bomb down;;;;;;;;;;;;;;;;;;;;;;;;
+		callOpenFile bombdownFilename,bombdownFilehandle
+		callLoadData bombdownFilehandle,bombdownData,imagewidth,imageheight
+		callCloseFile bombdownFilehandle
+		
+		;;;;;;;;;;;;;;;load coin ;;;;;;;;;;;;;;;;;;;;;;;;
+		callOpenFile coinFilename,coinFilehandle
+		callLoadData coinFilehandle,coinData,imagewidth,imageheight
+		callCloseFile coinFilehandle
+		
+		;;;;;;;;;;;;;;;;load heart ;;;;;;;;;;;;;;;;;;;;;;;;
+		;callOpenFile bombdownFilename,bombdownFilehandle
+		;callLoadData bombdownFilehandle,bombdownData,imagewidth,imageheight
+		;callCloseFile bombdownFilehandle
+		
+		ret
+
+loadimages endp
 
 
 END MAIN
