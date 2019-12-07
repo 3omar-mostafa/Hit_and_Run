@@ -215,6 +215,10 @@ local _finish , _label_G , _label_P1 , _label_P2 , _label_F , _label_C , _label_
 	; TODO to be completed
 	_label_P1: 
 	clearBlock x1 , y1
+	
+	mov bomberx ,16
+	mov bombery , 32
+	;drawpic bomberx,bombery,bomerData
 	JMP _finish
 	
 	; TODO to be completed
@@ -487,11 +491,15 @@ isup:
 			mov bomb1.to_be_drawn ,0
 	
 			drawpic bomberx,bomberY,bomerData
+			updategrid bomberx , bomberY , p1
 			jmp finish
 			
 nodraw:
 			clearblock bomberX , y_old
+			updategrid bomberX , y_old , G
+			
 			drawpic bomberx,bomberY,bomerData
+			updategrid bomberx , bomberY , p1
 			
 temp3:
 			jmp finish
@@ -518,11 +526,15 @@ isdown:
 			mov bomb1.to_be_drawn ,0
 			
 			drawpic bomberx,bomberY,bomerData
+			updategrid bomberx , bomberY , p1
 			jmp finish
 nodraw1:
 			
 			clearblock bomberX , y_old
+			updategrid bomberX , y_old , G
+			
 			drawpic bomberx,bomberY,bomerData
+			updategrid bomberx , bomberY , p1
 temp4:
 			jmp finish
 tempfinish1:jmp tempfinish2
@@ -547,12 +559,16 @@ isright:
 			mov bomb1.to_be_drawn ,0
 			
 			drawpic bomberx,bomberY,bomerData
+			updategrid bomberx , bomberY , p1
 			jmp finish
 nodraw3:
 			
 		
 			clearblock y_old , bomberY
+			updategrid y_old , bomberY , G
+			
 			drawpic bomberx,bomberY,bomerData
+			updategrid bomberx , bomberY , p1
 temp5:			
 			jmp finish
 tempfinish2:jmp finish
@@ -576,12 +592,16 @@ isleft:
 			mov bomb1.to_be_drawn ,0
 			
 			drawpic bomberx,bomberY,bomerData
+			updategrid bomberx , bomberY , p1
 			jmp finish
 nodraw4:
 			
 			
 			clearblock y_old , bomberY
+			updategrid y_old , bomberY ,G
+			
 			drawpic bomberx,bomberY,bomerData
+			updategrid bomberx , bomberY , p1
 			jmp finish
 space:			
 			
