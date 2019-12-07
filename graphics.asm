@@ -1,10 +1,11 @@
 .Model COMPACT
 .386
-.Stack 64
+.Stack 128
 .Data
 include inout.inc
-
-	time db ?
+test1 dw ?
+test2 dw ?
+time db ?
 	last_time db ?
 	y_old DW ?
 	gridWidth EQU 320
@@ -53,9 +54,9 @@ include inout.inc
 	;heartFilename DB 'bombdown.img', 0
 	;heartFilehandle DW ?
 	;heartData DB imagewidth*imageheight dup(2)
-	
-	
-	; set bit in Most signeficant bit refers to block (forbidden movement)
+
+
+; set bit in Most signeficant bit refers to block (forbidden movement)
 	X EQU  10000000b ; 128
 	B EQU  10000001b ; 129
 	G EQU  00000000b ; 0
@@ -71,17 +72,18 @@ include inout.inc
 	F_B EQU F or B
 	C_B EQU C or B
 	H_B EQU H or B
-		
-		;  	    0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19
-	grid DB X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X
-		 DB X , G , G , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , X                                                                  
-		 DB X , G , X , B , X , G , X , B , X , G , G , X , B , X , G , X , B , X , G , X           
-		 DB X , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , X                                                                                       
-		 DB X , G , X , B , X , G , X , B , X , G , G , X , B , X , G , X , B , X , G , X                                                                                     
-		 DB X , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , X                                                               
-		 DB X , G , X , B , X , G , X , B , X , G , G , X , B , X , G , X , B , X , G , X                                                                                    
-		 DB X , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , G , G , X                                                                    
-		 DB X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X
+
+;  	    0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19
+grid DB X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X
+	 DB X , G , G , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , X                                                                  
+	 DB X , G , X , B , X , G , X , B , X , G , G , X , B , X , G , X , B , X , G , X           
+	 DB X , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , X                                                                                       
+	 DB X , G , X , B , X , G , X , B , X , G , G , X , B , X , G , X , B , X , G , X                                                                                     
+	 DB X , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , X                                                               
+	 DB X , G , X , B , X , G , X , B , X , G , G , X , B , X , G , X , B , X , G , X                                                                                    
+	 DB X , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , G , G , X                                                                    
+	 DB X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X
+
 
 .Code
 
@@ -99,16 +101,15 @@ MAIN PROC FAR
 		bombx dw 0
 		bomby dw 0
 		to_be_drawn db 0
-		bomb_time db 0
-		counter db ?
+		counter db 5
 	 bomb ends
 	 
 	 bomb1 bomb<>
-
-
+	 
 clearBlock MACRO x , y
 local sketch
 
+	pusha
 	MOV CX,x
     MOV DX,y
 	MOV DI,x
@@ -130,10 +131,8 @@ JNE sketch
     INC DX
     CMP DX , SI
 JNE sketch
-
+	popa
 ENDM clearBlock
-
-
 
 updategrid macro objectx,objecty,object
 			
@@ -150,36 +149,62 @@ updategrid macro objectx,objecty,object
 
 endm updategrid	
 
-checkBlock MACRO x1 , y1
-local __finish , _finish , _label_G , _label_P1 , _label_P2 , _label_F , _label_C , _label_H
-call find1Darray
 
-mov cl , DS:[BP][DI]
+ClearBuffer MACRO
+    LOCAL clear , endClear
+    clear:
+      MOV AH ,1
+      INT 16h
+      JZ endClear
+      MOV AH,0
+      INT 16h
+      CMP AX , 0          
+      JMP clear
+    endCLear:
+ENDM ClearBuffer
 
-cmp cl , X
-je __finish
 
-shl cl , 1
-shr cl , 1
-shr cl , 1
+drawpic macro x,y,imageData
 
-updategrid x1 , y1 , cl 
-	CMP cl , G  
+LEA BX , imageData ; BL contains index at the current drawn pixel
+	
+	push si
+	push di
+	push bp
+	mov si ,x
+	mov bp ,x
+	mov di,y
+  MOV CX,x ; x1
+  MOV DX,y ; y1
+	call drawpixel 
+  pop bp
+	pop di
+  pop si
+endm drawpic 
+
+
+
+checkTypeAndDraw MACRO x1 , y1 , type1
+local _finish , _label_G , _label_P1 , _label_P2 , _label_F , _label_C , _label_H
+
+
+
+	CMP type1 , G  
 	JE _label_G 
 	
-	CMP cl , P1 
+	CMP type1 , P1 
 	JE _label_P1
 	
-	CMP cl , P2 
+	CMP type1 , P2 
 	JE _label_P2
 	
-	CMP cl , F  
+	CMP type1 , F  
 	JE _label_F 
 	
-	CMP cl , C  
+	CMP type1 , C  
 	JE _label_C 
 	
-	CMP cl , H  
+	CMP type1 , H  
 	JE _label_H
 	
 	
@@ -210,89 +235,68 @@ updategrid x1 , y1 , cl
 	JMP _finish
 	
 _finish:
+ENDM checkTypeAndDraw
+
+
+
+
+checkBlock MACRO x_1 , y_1
+local __finish , _label_G , _label_P1 , _label_P2 , _label_F , _label_C , _label_H
+
+
+
+call find1Darray
+
+
+mov cl , DS:[BP][DI]
+;-----------------
+;printnum cl
+;	push ax
+;	MOV AH , 0
+;	INT 16h
+;	pop ax 
+;-----------------
+
+cmp cl , X
+je __finish
+
+shl cl , 1
+shr cl , 1
+shr cl , 1
+shl cl , 1
+
+;-----------------
+;printnum cl
+;	push ax
+;	mov ah,2
+;	mov dl,','
+;	int 21h
+;	
+;	
+;	MOV AH , 0
+;	INT 16h
+;	
+;	mov ah,2
+;	mov dl,','
+;	int 21h
+;	pop ax 
+;	
+;-----------------
+
+
+updategrid x_1 , y_1 , cl 
+
+
+
+checkTypeAndDraw x_1 ,y_1, cl
 
 __finish:
 ENDM checkBlock
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;start of the program;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+call loadimages
 
-;checkTypeAndDraw MACRO x1 , y1 , type1
-;local _finish , _label_G , _label_P1 , _label_P2 , _label_F , _label_C , _label_H
-;
-;	CMP type1 , G  
-;	JE _label_G 
-;	
-;	CMP type1 , P1 
-;	JE _label_P1
-;	
-;	CMP type1 , P2 
-;	JE _label_P2
-;	
-;	CMP type1 , F  
-;	JE _label_F 
-;	
-;	CMP type1 , C  
-;	JE _label_C 
-;	
-;	CMP type1 , H  
-;	JE _label_H
-;	
-;	
-;	_label_G:  
-;	clearBlock x1 , y1
-;	JMP _finish
-;	
-;	; TODO to be completed
-;	_label_P1: 
-;	clearBlock x1 , y1
-;	JMP _finish
-;	
-;	; TODO to be completed
-;	_label_P2: 
-;	clearBlock x1 , y1
-;	JMP _finish
-;	
-;	_label_F:  
-;	;
-;	JMP _finish
-;
-;	_label_C: 
-;	drawpic x1 , y1 , coinData
-;	JMP _finish
-;	
-;	_label_H:
-;	;
-;	JMP _finish
-;	
-;_finish:
-;ENDM checkTypeAndDraw
-;
-
-
-
-
-
-drawpic macro x,y,imageData
-
-LEA BX , imageData ; BL contains index at the current drawn pixel
-	
-	push si
-	push di
-	push bp
-	mov si ,x
-	mov bp ,x
-	mov di,y
-  MOV CX,x ; x1
-  MOV DX,y ; y1
-	call drawpixel 
-  pop bp
-	pop di
-  pop si
-endm drawpic 
-
-
-
-	call loadimages
 	
 	MOV AH,0ch
 	MOV CX , 0
@@ -322,6 +326,8 @@ JNE drawLoop
 JNE drawLoop
 
 
+;;;;;;;;;;;;;;;;;;;;;;;draw pomerman;;;;;;;;;;;;;;;;;;;;;;;;
+
 
 	drawpic bomberx,bomberY,bomerData
     writescore1 0000
@@ -329,34 +335,58 @@ JNE drawLoop
 	writeheart1 3
 	writeheart2 3
 	
-	
 	LEA bp , grid	
-	___label:
+___label:
+	
 	
 	GetCurrentTime time
 	mov al,time
 	cmp al,last_time
 	je wait_for_bomb
 	inc bomb1.counter
-
-wait_for_bomb:
+	
+	
+	wait_for_bomb:
 	mov last_time,al
+	
+	
 	call checkkeypressed
+	ClearBuffer
 	
 	cmp bomb1.counter , 3
 	je explode 
+	
+	
 	jmp ___label
-
+	
 explode:
 	
 	mov bomb1.counter , 5 ; 5 is any arbitrary value above 3 
 	mov ax , bomb1.bomby
 	mov bx , bomb1.bombx
-	call find1Darray
+	mov bomb1.to_be_drawn , 0
+	
+	push bx
+	push ax
+	
+	;call find1Darray
+
+	;--------------------------------------------
+	
+	
 	updategrid bomb1.bombx , bomb1.bomby , G
+
+	clearBlock bomb1.bombx , bomb1.bomby
+;------------------------------
+
+;------------------------------
+	pop ax
+	pop bx
+	
 	
 	PUSH BX
 	ADD BX , 16
+
 	checkBlock BX , AX
 	SUB BX , 32
 	checkBlock BX , AX
@@ -370,7 +400,7 @@ explode:
 	
 	
 	jmp ___label
-
+	
 
 
 
@@ -418,8 +448,11 @@ drawpixel endp
 
 
 checkkeypressed PROC 
-            mov ah , 0
+            mov ah , 1
             int 16h
+			
+			
+			
             cmp ah , 72
             jz isup
             cmp ah , 80
@@ -556,8 +589,9 @@ space:
 			mov bomb1.bombx , ax
 			mov ax, bombery
 			mov bomb1.bomby , ax
-			mov bomb1.counter , 0
+			;GetCurrentTime bomb1.to_be_drawn
 			mov bomb1.to_be_drawn , 1
+			mov bomb1.counter , 0
 		
 			updategrid bomberX , bomberY , B1
 			;don't forget to ubdate the grid to ground
@@ -570,7 +604,11 @@ finish:
 checkkeypressed ENDP
 
 find1Darray PROC
-            ; y is AX , x is BX
+            ;sub al , 16  ;Y
+			push ax
+			push bx
+			push cx
+			
             INC AX
             INC BX
 
@@ -593,9 +631,12 @@ find1Darray PROC
 
             mov di , ax
 			
+			pop cx
+			pop bx
+			pop ax
+			
             RET
 find1Darray ENDP
-
 
 
 loadimages proc
@@ -612,22 +653,22 @@ loadimages proc
 		callLoadData bomerFilehandle,bomerData,imagewidth,imageheight
 		callCloseFile bomerFilehandle
 		
-		;;;;;;;;;;;;;;;load bomb right;;;;;;;;;;;;;;;;;;;;;;;;
-		callOpenFile bombrightFilename,bombrightFilehandle
-		callLoadData bombrightFilehandle,bombrightData,imagewidth,imageheight
-		callCloseFile bombrightFilehandle
-		;;;;;;;;;;;;;;;load bomb left;;;;;;;;;;;;;;;;;;;;;;;;
-		callOpenFile bombleftFilename,bombleftFilehandle
-		callLoadData bombleftFilehandle,bombleftData,imagewidth,imageheight
-		callCloseFile bombleftFilehandle
-		;;;;;;;;;;;;;;load bomb up;;;;;;;;;;;;;;;;;;;;;;;;
-		callOpenFile bombupFilename,bombupFilehandle
-		callLoadData bombupFilehandle,bombupData,imagewidth,imageheight
-		callCloseFile bombupFilehandle
-		;;;;;;;;;;;;;;;load bomb down;;;;;;;;;;;;;;;;;;;;;;;;
-		callOpenFile bombdownFilename,bombdownFilehandle
-		callLoadData bombdownFilehandle,bombdownData,imagewidth,imageheight
-		callCloseFile bombdownFilehandle
+		;;;;;;;;;;;;;;;;load bomb right;;;;;;;;;;;;;;;;;;;;;;;;
+		;callOpenFile bombrightFilename,bombrightFilehandle
+		;callLoadData bombrightFilehandle,bombrightData,imagewidth,imageheight
+		;callCloseFile bombrightFilehandle
+		;;;;;;;;;;;;;;;;load bomb left;;;;;;;;;;;;;;;;;;;;;;;;
+		;callOpenFile bombleftFilename,bombleftFilehandle
+		;callLoadData bombleftFilehandle,bombleftData,imagewidth,imageheight
+		;callCloseFile bombleftFilehandle
+		;;;;;;;;;;;;;;;load bomb up;;;;;;;;;;;;;;;;;;;;;;;;
+		;callOpenFile bombupFilename,bombupFilehandle
+		;callLoadData bombupFilehandle,bombupData,imagewidth,imageheight
+		;callCloseFile bombupFilehandle
+		;;;;;;;;;;;;;;;;load bomb down;;;;;;;;;;;;;;;;;;;;;;;;
+		;callOpenFile bombdownFilename,bombdownFilehandle
+		;callLoadData bombdownFilehandle,bombdownData,imagewidth,imageheight
+		;callCloseFile bombdownFilehandle
 		
 		;;;;;;;;;;;;;;;load coin ;;;;;;;;;;;;;;;;;;;;;;;;
 		callOpenFile coinFilename,coinFilehandle
@@ -643,7 +684,4 @@ loadimages proc
 
 loadimages endp
 
-
 END MAIN
-
-
