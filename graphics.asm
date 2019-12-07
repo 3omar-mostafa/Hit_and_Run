@@ -585,6 +585,9 @@ nodraw4:
 			jmp finish
 space:			
 			
+			cmp bomb1.counter,3
+			jb finish
+			
             mov ax, bomberx
 			mov bomb1.bombx , ax
 			mov ax, bombery
