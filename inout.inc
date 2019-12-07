@@ -16,7 +16,7 @@ EXTRN loadData:NEAR
 EXTRN closeFile:NEAR
 
 
-writescore1 macro score
+writescore2 macro score
            pusha
            ;;;set cursor;;;
            MOV DH , 00
@@ -32,9 +32,9 @@ writescore1 macro score
 		   mov ax , score
            printnum ax
            popa
-ENDM       writescore
+ENDM       writescore2
 
-writescore2 macro score
+writescore1 macro score
            pusha
            ;;;set cursor;;;
            MOV DH , 00
@@ -50,10 +50,10 @@ writescore2 macro score
 		   mov ax , score
            printnum ax
            popa
-ENDM       writescore
+ENDM       writescore1
 
 
-writeheart1 macro heart
+writeheart2 macro heart
            pusha
            ;;;set cursor;;;
            MOV DH , 00
@@ -69,9 +69,9 @@ writeheart1 macro heart
 		   mov ax , heart
            printnum ax
            popa
-ENDM       writescore
+ENDM       writeheart2
 
-writeheart2 macro heart
+writeheart1 macro heart
            pusha
            ;;;set cursor;;;
            MOV DH , 00
@@ -87,7 +87,7 @@ writeheart2 macro heart
 		   mov ax , heart
            printnum ax
            popa
-ENDM       writescore
+ENDM       writeheart1
 
 GetCurrentTime macro time
             pusha

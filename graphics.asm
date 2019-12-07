@@ -23,14 +23,19 @@ time db ?
 	bomerFilehandle DW ?
 	bomerData DB imagewidth*imageheight dup(2)
 	
-	bomberx DW 16
-	bomberY DW 32
+	bomberx DW 288
+	bomberY DW 128
 	
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;N
-    bomber2x DW 288
-	bomber2Y DW 128
+    bomber2x DW 16
+	bomber2Y DW 32
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;N
-	
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;nn
+	score1 dw 0000
+	score2 dw 0000
+	heart1 dw 3
+	heart2 dw 3
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;nn
 	bombFilename DB 'bomb.img', 0
 	bombFilehandle DW ?
 	bombData DB imagewidth*imageheight dup(2)
@@ -190,17 +195,15 @@ endm drawpic
 
 
 
-checkTypeAndDraw MACRO x1 , y1 , type1
-local _finish , _label_G , _label_P1 , _label_P2 , _label_F , _label_C , _label_H
+checkTypeAndDraw MACRO x1 , y1 , type1,bombtype
+local _finish , _label_G , _label_P1 , _label_P2 , _label_F , _label_C , _label_H,increase_score1,increase_score2,decrease_score1,decrease_score2,bombtype
 
-
+pusha
 
 	CMP type1 , G  
 	JE _label_G 
 	
 	CMP type1 , P1
-    
-    	
 	JE _label_P1
 	
 	CMP type1 , P2 
@@ -224,8 +227,35 @@ local _finish , _label_G , _label_P1 , _label_P2 , _label_F , _label_C , _label_
 	_label_P1: 
 	clearBlock x1 , y1
 	
-	mov bomberx ,16
-	mov bombery , 32
+	mov bomberx ,288
+	mov bombery , 128
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;nn
+	;push cx
+	mov cx , bombtype
+	cmp cx,1
+	je decrease_score1
+	mov cx , bombtype
+	cmp cx,2
+	je increase_score1
+	decrease_score1:
+	dec heart1
+	writeheart1 heart1
+	cmp score1 , 0
+	je _finish
+	mov cx , 200
+	 sub score1,cx
+	 writescore1 score1
+	 
+	 jmp _finish
+	 increase_score1:
+	    dec heart1
+	 writeheart1 heart1
+	 mov cx , 200
+	 add score2,cx
+	 writescore2 score2
+	
+	;pop cx
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;nn
 	;drawpic bomberx,bombery,bomerData
 	JMP _finish
 	
@@ -233,9 +263,38 @@ local _finish , _label_G , _label_P1 , _label_P2 , _label_F , _label_C , _label_
 	_label_P2: 
 	clearBlock x1 , y1
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;N
-	mov bomber2x ,288
-	mov bomber2y ,128
+	mov bomber2x ,16
+	mov bomber2y ,32
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;N
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;nn
+	;push cx
+	mov cx , bombtype
+	cmp cx , 2
+	je decrease_score2
+	mov cx , bombtype
+	cmp cx , 1
+	je increase_score2
+	decrease_score2:
+	 
+	  dec heart2
+	  writeheart2 heart2
+	cmp score2 ,0
+	je _finish
+	mov cx , 200
+	 sub score2,cx
+	writescore2 score2
+	 
+	 jmp _finish
+	 increase_score2:
+	    dec heart2
+	 writeheart2 heart2
+	 mov cx , 200
+	 add score1,cx
+	 writescore1 score1
+	
+	 ;pop cx
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;nn
+	
 	JMP _finish
 	
 	_label_F:  
@@ -250,14 +309,15 @@ local _finish , _label_G , _label_P1 , _label_P2 , _label_F , _label_C , _label_
 	;
 	JMP _finish
 	
-_finish:
+_finish:popa 
+
 ENDM checkTypeAndDraw
 
 
 
 
-checkBlock MACRO x_1 , y_1
-local __finish , _label_G , _label_P1 , _label_P2 , _label_F , _label_C , _label_H
+checkBlock MACRO x_1 , y_1,bombtype
+local __finish , _label_G , _label_P1 , _label_P2 , _label_F , _label_C , _label_H,bombtype
 
 
 
@@ -304,7 +364,7 @@ updategrid x_1 , y_1 , cl
 
 
 
-checkTypeAndDraw x_1 ,y_1, cl
+checkTypeAndDraw x_1 ,y_1, cl,bombtype
 
 __finish:
 ENDM checkBlock
@@ -349,10 +409,10 @@ JNE drawLoop
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;N
 	drawpic bomber2x,bomber2Y,bomerData
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;N
-    writescore1 0000
-	writescore2 0000
-	writeheart1 3
-	writeheart2 3
+    writescore1 score1
+	writescore2 score2
+	writeheart1 heart1
+	writeheart2 heart2
 	
 	LEA bp , grid	
 ___label:
@@ -424,16 +484,16 @@ explode:
 	PUSH BX
 	ADD BX , 16
 
-	checkBlock BX , AX
+	checkBlock BX , AX,1
 	SUB BX , 32
-	checkBlock BX , AX
+	checkBlock BX , AX,1
 	
 	POP BX
 	
 	ADD AX , 16
-	checkBlock BX , AX
+	checkBlock BX , AX,1
 	SUB AX , 32
-	checkBlock BX , AX
+	checkBlock BX , AX,1
 	
 	;jmp ___label
 	
@@ -499,16 +559,16 @@ explode2:
 	PUSH BX
 	ADD BX , 16
 
-	checkBlock BX , AX
+	checkBlock BX , AX,2
 	SUB BX , 32
-	checkBlock BX , AX
+	checkBlock BX , AX,2
 	
 	POP BX
 	
 	ADD AX , 16
-	checkBlock BX , AX
+	checkBlock BX , AX,2
 	SUB AX , 32
-	checkBlock BX , AX
+	checkBlock BX , AX,2
 	
 	
 	jmp ___label
