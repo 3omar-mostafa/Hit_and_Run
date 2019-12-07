@@ -26,6 +26,11 @@ time db ?
 	bomberx DW 16
 	bomberY DW 32
 	
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;N
+    bomber2x DW 288
+	bomber2Y DW 128
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;N
+	
 	bombFilename DB 'bomb.img', 0
 	bombFilehandle DW ?
 	bombData DB imagewidth*imageheight dup(2)
@@ -105,6 +110,7 @@ MAIN PROC FAR
 	 bomb ends
 	 
 	 bomb1 bomb<>
+	 bomb2 bomb<>
 	 
 clearBlock MACRO x , y
 local sketch
@@ -192,7 +198,9 @@ local _finish , _label_G , _label_P1 , _label_P2 , _label_F , _label_C , _label_
 	CMP type1 , G  
 	JE _label_G 
 	
-	CMP type1 , P1 
+	CMP type1 , P1
+    
+    	
 	JE _label_P1
 	
 	CMP type1 , P2 
@@ -224,6 +232,10 @@ local _finish , _label_G , _label_P1 , _label_P2 , _label_F , _label_C , _label_
 	; TODO to be completed
 	_label_P2: 
 	clearBlock x1 , y1
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;N
+	mov bomber2x ,288
+	mov bomber2y ,128
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;N
 	JMP _finish
 	
 	_label_F:  
@@ -334,6 +346,9 @@ JNE drawLoop
 
 
 	drawpic bomberx,bomberY,bomerData
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;N
+	drawpic bomber2x,bomber2Y,bomerData
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;N
     writescore1 0000
 	writescore2 0000
 	writeheart1 3
@@ -349,17 +364,32 @@ ___label:
 	je wait_for_bomb
 	inc bomb1.counter
 	
-	
+	;wait_for_bomb:
+	;mov last_time,al
+	;;;;;;;;;;;;;;;;;;;;;n
+	GetCurrentTime time
+	mov al,time
+	cmp al,last_time
+	je wait_for_bomb2
+	inc bomb2.counter
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;n
 	wait_for_bomb:
 	mov last_time,al
-	
-	
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;n
+	wait_for_bomb2:
+	mov last_time,al
+	;;;;;;;;;;;;;;;;;;;;;;n
 	call checkkeypressed
+	call checkkeypressed2
 	ClearBuffer
 	
 	cmp bomb1.counter , 3
 	je explode 
 	
+	;;;;;;;;;;;;;;;;;;;;;nn
+	cmp bomb2.counter , 3
+	je explode2 
+	;;;;;;;;;;;;;;;;;;;;;nn
 	
 	jmp ___label
 	
@@ -369,6 +399,9 @@ explode:
 	mov ax , bomb1.bomby
 	mov bx , bomb1.bombx
 	mov bomb1.to_be_drawn , 0
+	
+
+	
 	
 	push bx
 	push ax
@@ -402,10 +435,85 @@ explode:
 	SUB AX , 32
 	checkBlock BX , AX
 	
+	;jmp ___label
+	
+	
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;nn	
+	;ClearBuffer
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;nn	
+	
+	
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;N
+;___label2:
+	
+	
+	; GetCurrentTime time
+	; mov al,time
+	; cmp al,last_time
+	; je wait_for_bomb2
+	; inc bomb2.counter
+	
+	
+	; wait_for_bomb2:
+	; mov last_time,al
+	
+	
+	; call checkkeypressed2
+	; ClearBuffer
+	
+	;cmp bomb2.counter , 3
+	;je explode2 
 	
 	jmp ___label
+	;jmp ___label2
 	
+explode2:
+  
+      
+	
+	mov bomb2.counter , 5 ; 5 is any arbitrary value above 3 
+	mov ax , bomb2.bomby
+	mov bx , bomb2.bombx
+	mov bomb2.to_be_drawn , 0
+	
+	push bx
+	push ax
+	
+	;call find1Darray
 
+	;--------------------------------------------
+	
+	
+	updategrid bomb2.bombx , bomb2.bomby , G
+
+	clearBlock bomb2.bombx , bomb2.bomby
+;------------------------------
+
+;------------------------------
+	pop ax
+	pop bx
+	
+	
+	PUSH BX
+	ADD BX , 16
+
+	checkBlock BX , AX
+	SUB BX , 32
+	checkBlock BX , AX
+	
+	POP BX
+	
+	ADD AX , 16
+	checkBlock BX , AX
+	SUB AX , 32
+	checkBlock BX , AX
+	
+	
+	jmp ___label
+	;jmp ___label2
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 
@@ -625,6 +733,184 @@ space:
 finish:            
 			RET
 checkkeypressed ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;N
+checkkeypressed2 PROC 
+            mov ah , 1
+            int 16h
+			
+			
+			
+            cmp ah , 17
+            jz isup2
+            cmp ah , 31
+            jz isdown2
+            cmp ah , 32
+            jz temp2_2right2
+            cmp ah , 30
+            jz temp2_22_2
+            cmp ah , 15
+			jz tab
+            jmp temp2_2finish21_2
+                
+isup2:
+			mov ax , bomber2Y
+			mov y_old , ax
+			
+			mov ax , bomber2Y
+			mov bx , bomber2X
+			sub ax , 16
+			call find1Darray 
+			mov dl , DS:[BP][di]
+			shl dl ,1      ;shift to check if it's a block or brick
+			jc temp2_23_2    ;don't draw
+			
+			sub bomber2Y , 16
+			
+			
+			
+			cmp bomb2.to_be_drawn,1
+			jne nodraw2
+			drawpic bomb2.bombx , bomb2.bomby , bombData
+			mov bomb2.to_be_drawn ,0
+	
+			drawpic bomber2X,bomber2Y,bomerData
+			updategrid bomber2X , bomber2Y , p2
+			jmp finish2
+			
+nodraw2:
+			clearblock bomber2X , y_old
+			updategrid bomber2X , y_old , G
+			
+			drawpic bomber2X,bomber2Y,bomerData
+			updategrid bomber2X , bomber2Y , p2
+			
+temp2_23_2:
+			jmp finish2
+temp2_22_2: 		jmp temp2_2
+temp2_2right2:  jmp isright2
+isdown2:
+			mov ax , bomber2Y
+			mov y_old , ax
+			
+			mov ax , bomber2Y
+			mov bx , bomber2X
+			add ax , 16
+			call find1Darray
+			mov dl , DS:[BP][di]
+			shl dl,1
+			jc temp2_24_2
+			
+			add bomber2Y , 16
+			
+			
+			cmp bomb2.to_be_drawn,1
+			jne nodraw21_2
+			drawpic bomb2.bombx , bomb2.bomby , bombData
+			mov bomb2.to_be_drawn ,0
+			
+			drawpic bomber2X,bomber2Y,bomerData
+			updategrid bomber2X , bomber2Y , p2
+			jmp finish2
+nodraw21_2:
+			
+			clearblock bomber2X , y_old
+			updategrid bomber2X , y_old , G
+			
+			drawpic bomber2X,bomber2Y,bomerData
+			updategrid bomber2X , bomber2Y , p2
+temp2_24_2:
+			jmp finish2
+temp2_2finish21_2:jmp temp2_2finish22_2
+temp2_2: 		jmp isleft2
+isright2:
+			mov ax , bomber2X
+			mov y_old , ax
+			
+			mov ax , bomber2Y
+			mov bx , bomber2X
+			add bx , 16
+			call find1Darray
+			mov dl , DS:[BP][di]
+			shl dl,1
+			jc temp2_25_2
+			add bomber2X , 16
+			
+			
+			cmp bomb2.to_be_drawn,1
+			jne nodraw23_2
+			drawpic bomb2.bombx , bomb2.bomby , bombData
+			mov bomb2.to_be_drawn ,0
+			
+			drawpic bomber2X,bomber2Y,bomerData
+			updategrid bomber2X , bomber2Y , p2
+			jmp finish2
+nodraw23_2:
+			
+		
+			clearblock y_old , bomber2Y
+			updategrid y_old , bomber2Y , G
+			
+			drawpic bomber2X,bomber2Y,bomerData
+			updategrid bomber2X , bomber2Y , p2
+temp2_25_2:			
+			jmp finish2
+temp2_2finish22_2:jmp finish2
+isleft2: 
+			mov ax , bomber2X
+			mov y_old , ax
+			
+			mov ax , bomber2Y
+			mov bx , bomber2X
+			sub bx , 16
+			call find1Darray
+			mov dl , DS:[BP][di]
+			shl dl,1
+			jc finish2
+			sub bomber2X , 16
+			
+			
+			cmp bomb2.to_be_drawn,1
+			jne nodraw24_2
+			drawpic bomb2.bombx , bomb2.bomby , bombData
+			mov bomb2.to_be_drawn ,0
+			
+			drawpic bomber2X,bomber2Y,bomerData
+			updategrid bomber2X , bomber2Y , p2
+			jmp finish2
+nodraw24_2:
+			
+			
+			clearblock y_old , bomber2Y
+			updategrid y_old , bomber2Y ,G
+			
+			drawpic bomber2X,bomber2Y,bomerData
+			updategrid bomber2X , bomber2Y , p2
+			jmp finish2
+tab:			
+			
+			cmp bomb2.counter,3
+			jb finish2
+			
+            mov ax, bomber2X
+			mov bomb2.bombx , ax
+			mov ax, bomber2Y
+			mov bomb2.bomby , ax
+			;GetCurrentTime bomb1.to_be_drawn
+			mov bomb2.to_be_drawn , 1
+			mov bomb2.counter , 0
+		
+			updategrid bomber2X , bomber2Y , B1
+			;don't forget to ubdate the grid to ground
+			
+			
+			
+			
+finish2:            
+			RET
+checkkeypressed2 ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;N
 
 find1Darray PROC
             ;sub al , 16  ;Y
