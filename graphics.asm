@@ -11,9 +11,10 @@ time db ?
 	gridWidth EQU 320
 	gridHeight EQU 144
 	
+	positionInGridFile DW 0
 	gridFilename DB 'grid.img', 0
 	gridFilehandle DW ?
-	gridData DB gridWidth*gridHeight dup(2)
+	gridData DB 0
 	
 	imagewidth EQU 16
 	imageheight EQU 16
@@ -381,34 +382,51 @@ ENDM checkBlock
 
 call loadimages
 
-	
-	MOV AH,0ch
-	MOV CX , 0
-	MOV DX , 0
 
+	;;;;;;;;;;;;;;load and draw grid;;;;;;;;;;;;;;;;
+	callOpenFile gridFilename,gridFilehandle
+	
 	
 	LEA BX , gridData ; BL contains index at the current drawn pixel
 	
-  MOV CX,0 ; x1
-  MOV DX,16 ; y1
-  MOV AH,0ch
-	
-	
+	MOV CX,0 ; x1
+	MOV DX,16 ; y1
+	MOV AH,0ch
+		
 ; Drawing loop
 drawLoop:
 
-  MOV AL,[BX]
-  INT 10h 
-  INC CX
-  INC BX
-  CMP CX,320 
-JNE drawLoop 
-	
-  MOV CX , 0
-  INC DX
-  CMP DX , 160
-JNE drawLoop
+	pusha
+	;JUMP TO POSITION INSIDE THE FILE.                            <==============
+	mov  ah, 42h          	;SERVICE FOR SEEK.
+	mov  al, 0            	;START FROM THE BEGINNING OF FILE.
+	mov  bx, gridFilehandle  	;FILE.
+	mov  cx, 0            	;THE FILE POSITION MUST BE PLACED IN
+	mov  dx, positionInGridFile   ;CX:DX, EXAMPLE, TO JUMP TO POSITION
+	int  21h
 
+	;READ ONE CHAR FROM CURRENT FILE POSITION.
+	mov  ah, 3fh          ;SERVICE TO READ FROM FILE.
+	mov  bx, gridFilehandle
+	mov  cx, 1            ;HOW MANY BYTES TO READ.
+	inc positionInGridFile
+	lea  dx, gridData       ;WHERE TO STORE THE READ BYTES.  
+	int  21h
+		
+	popa
+		
+	MOV AL,[BX]
+	INT 10h 
+	INC CX
+	CMP CX,320 
+JNE drawLoop 
+	MOV CX , 0
+	INC DX
+	CMP DX , 160
+JNE drawLoop
+	
+	callCloseFile gridFilehandle
+	
 
 ;;;;;;;;;;;;;;;;;;;;;;;draw pomerman;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1021,10 +1039,6 @@ find1Darray ENDP
 
 
 loadimages proc
-        ;;;;;;;;;;;;;;load grid;;;;;;;;;;;;;;;;
-		callOpenFile gridFilename,gridFilehandle
-		callLoadData gridFilehandle,gridData,gridWidth,gridHeight
-		callCloseFile gridFilehandle
         ;;;;;;;;;;;;;;load bomb;;;;;;;;;;;;;;;;		
 		callOpenFile bombFilename,bombFilehandle
 		callLoadData bombFilehandle,bombData,imagewidth,imageheight
