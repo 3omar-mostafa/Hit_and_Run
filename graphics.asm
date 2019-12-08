@@ -1,11 +1,14 @@
-.Model COMPACT
-.386
-.Stack 1024
-.Data
+.MODEL SMALL
+.STACK 2048
+.386 ; sets the instruction set of 80386 prosessor
+
+.DATA
 include inout.inc
 test1 dw ?
 test2 dw ?
 time db ?
+
+stackIP dw ?
 	last_time db ?
 	y_old DW ?
 	gridWidth EQU 320
@@ -42,22 +45,6 @@ time db ?
 	bombData DB imagewidth*imageheight dup(2)
 	
 	
-	bombrightFilename DB 'bombrit.img', 0
-	bombrightFilehandle DW ?
-	bombrightData DB imagewidth*imageheight dup(2)
-	
-	bombleftFilename DB 'bombleft.img', 0
-	bombleftFilehandle DW ?
-	bombleftData DB imagewidth*imageheight dup(2)
-	
-	bombupFilename DB 'bombup.img', 0
-	bombupFilehandle DW ?
-	bombupData DB imagewidth*imageheight dup(2)
-	
-	bombdownFilename DB 'bombdown.img', 0
-	bombdownFilehandle DW ?
-	bombdownData DB imagewidth*imageheight dup(2)
-	
 	coinFilename DB 'coin.img', 0
 	coinFilehandle DW ?
 	coinData DB imagewidth*imageheight dup(2)
@@ -79,6 +66,7 @@ time db ?
 	C EQU  00000010b ; 2
 	H EQU  00000100b ; 4
 	
+	Bi db  10000001b ; 129
 	
 	F_B EQU F or B
 	C_B EQU C or B
@@ -100,13 +88,31 @@ grid DB X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , 
 
 PUBLIC Graphics
 
-Graphics PROC FAR
+Graphics PROC
   MOV AX , @DATA
   MOV DS , AX
+  
   
   MOV AH, 0
   MOV AL, 13h
   INT 10h
+  
+	mov stackIP , sp
+	
+	
+	mov positionInGridFile , 0
+	mov bomberx , 288
+	mov bomberY , 128
+    mov bomber2x , 16
+	mov bomber2Y , 32
+	mov score1 , 0000
+	mov score2 , 0000
+	mov heart1 , 3
+	mov heart2 , 3
+	
+	
+	call initializeGrid
+	
 	
 	 bomb struc
 		bombx dw 0
@@ -380,6 +386,7 @@ ENDM checkBlock
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;start of the program;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
 call loadimages
 
 
@@ -440,6 +447,7 @@ JNE drawLoop
 	writeheart1 heart1
 	writeheart2 heart2
 	
+
 	LEA bp , grid	
 ___label:
 	
@@ -572,6 +580,7 @@ explode2:
 	;--------------------------------------------
 	
 	
+	
 	updategrid bomb2.bombx , bomb2.bomby , G
 
 	clearBlock bomb2.bombx , bomb2.bomby
@@ -604,7 +613,10 @@ explode2:
 
 ; return and exit
 exit:
-	RETF
+	
+	mov sp , stackIP
+
+	RET
 Graphics ENDP
 
 
@@ -1061,5 +1073,184 @@ loadimages proc
 		ret
 
 loadimages endp
+
+
+initializeGrid proc 
+
+	mov al , X
+	lea bx , grid
+	mov cx,20
+fill_f:
+	mov [BX] , al
+	inc bx
+	loop fill_f
+	
+	
+	
+	MOV [BX] , al
+	INC BX
+	MOV AL , G
+	MOV [BX] , AL
+	INC BX
+	MOV [BX] , AL
+	inc bx
+
+	
+	MOV CX , 16
+	CALL fillBricks
+
+	
+	MOV AL , X
+	MOV [BX] , AL
+	INC BX
+	
+	call fillLine2
+	
+	
+	MOV AL , X
+	MOV [BX] , AL
+	INC BX
+	
+	MOV CX , 18
+	CALL fillBricks
+	
+	
+	MOV AL , X
+	MOV [BX] , AL
+	INC BX
+	
+	call fillLine2
+	
+	
+		
+	MOV AL , X
+	MOV [BX] , AL
+	INC BX
+	
+	MOV CX , 18
+	CALL fillBricks
+	
+	
+	MOV AL , X
+	MOV [BX] , AL
+	INC BX
+	
+	
+	call fillLine2
+	
+	
+		
+	MOV AL , X
+	MOV [BX] , AL
+	INC BX
+	
+	MOV CX , 16
+	CALL fillBricks
+	
+	
+	MOV AL , G
+	MOV [BX] , AL
+	INC BX
+	
+	MOV AL , G
+	MOV [BX] , AL
+	INC BX
+	
+	MOV AL , X
+	MOV [BX] , AL
+	INC BX
+	
+	lea bx , grid
+	add bx,160
+	mov cx,19
+fill_l:
+	mov [BX] , al
+	inc bx
+	loop fill_l
+	 
+	RET
+initializeGrid endp
+
+
+; START FROM bX FOR CX TIMES
+fillBricks PROC
+
+MOV AL , B
+
+fillBrick:
+	mov [BX] , al
+	inc BX
+	LOOP fillBrick
+
+RET
+fillBricks ENDP
+
+; start from bx for 20 times
+fillLine2 PROC
+
+MOV AL , X
+MOV [BX] , AL
+INC BX
+MOV AL , G
+MOV [BX] , AL
+INC BX
+MOV AL , X
+MOV [BX] , AL
+INC BX
+MOV AL , B
+MOV [BX] , AL
+INC BX
+MOV AL , X
+MOV [BX] , AL
+INC BX
+MOV AL , G
+MOV [BX] , AL
+INC BX
+MOV AL , X
+MOV [BX] , AL
+INC BX
+MOV AL , B
+MOV [BX] , AL
+INC BX
+MOV AL , X
+MOV [BX] , AL
+INC BX
+MOV AL , G
+MOV [BX] , AL
+INC BX
+MOV AL , G
+MOV [BX] , AL
+INC BX
+MOV AL , X
+MOV [BX] , AL
+INC BX
+MOV AL , B
+MOV [BX] , AL
+INC BX
+MOV AL , X
+MOV [BX] , AL
+INC BX
+MOV AL , G
+MOV [BX] , AL 
+inc bx
+MOV AL , X
+MOV [BX] , AL
+INC BX
+MOV AL , B
+MOV [BX] , AL
+INC BX
+MOV AL , X
+MOV [BX] , AL
+INC BX
+MOV AL , G
+MOV [BX] , AL
+INC BX
+MOV AL , X
+MOV [BX] , AL
+INC BX
+
+RET
+fillLine2 ENDP
+
 
 END
