@@ -4,10 +4,14 @@
 ; DO NOT CALL THESE PROCs DIRECTLY
 
 .MODEL SMALL
-.STACK 1024
+.STACK 2048
 .386 ; sets the instruction set of 80386 prosessor
-.CODE
+.DATA
 
+spaceforprinting db '      ','$'
+
+
+.CODE
 
 ; These procedures are public
 ; i.e. can be called from another assembly file
@@ -20,6 +24,7 @@ PUBLIC switchToGraphicsMode
 PUBLIC openFile
 PUBLIC loadData
 PUBLIC closeFile
+PUBLIC spaceforprinting
 
 
 
@@ -140,6 +145,10 @@ closeFile PROC
 	INT 21h
 	RET
 closeFile ENDP
+
+
+
+
 
 
 END

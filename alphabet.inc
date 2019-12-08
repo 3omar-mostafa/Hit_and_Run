@@ -195,3 +195,20 @@ draw_W MACRO color , start_x , start_y , lineWidth
     callDrawColumnDown  color lineWidth start_x+4*lineWidth   start_y      			end_y
 
 ENDM draw_W
+
+
+draw_Y MACRO color , start_x , start_y , lineWidth
+    LOCAL end_y
+    end_y EQU start_y + 8*lineWidth
+	
+    callDrawColumnUp    color lineWidth start_x          	  start_y      			start_y+lineWidth
+    callDrawColumnUp    color lineWidth start_x+lineWidth  	  start_y+lineWidth		start_y+2*lineWidth
+	
+    callDrawRowLeft     color lineWidth start_x+2*lineWidth   start_y+3*lineWidth  	start_x+3*lineWidth
+	
+	callDrawColumnDown    color lineWidth start_x+3*lineWidth	  start_y      			start_y+4*lineWidth
+    callDrawColumnDown    color lineWidth start_x+4*lineWidth  	  start_y+lineWidth		start_y+5*lineWidth
+
+    callDrawColumnUp  color lineWidth start_x+2*lineWidth   start_y+3*lineWidth 		end_y-lineWidth
+
+ENDM draw_Y

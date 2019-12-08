@@ -14,6 +14,10 @@ stackIP dw ?
 	gridWidth EQU 320
 	gridHeight EQU 144
 	
+	gametimer db 100
+	
+	F4Scancode  EQU  3Eh
+	
 	positionInGridFile DW 0
 	gridFilename DB 'grid.img', 0
 	gridFilehandle DW ?
@@ -87,6 +91,7 @@ grid DB X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , 
 .Code
 
 PUBLIC Graphics
+PUBLIC gametimer
 
 Graphics PROC
   MOV AX , @DATA
@@ -109,6 +114,7 @@ Graphics PROC
 	mov score2 , 0000
 	mov heart1 , 3
 	mov heart2 , 3
+	mov gametimer , 100
 	
 	
 	call initializeGrid
@@ -460,6 +466,17 @@ ___label:
 	
 	GetCurrentTime time
 	mov al,time
+	
+	cmp al , last_time
+	je temptime
+	
+	printTime
+	
+	dec gametimer
+	
+	
+temptime:
+	
 	cmp al,last_time
 	je wait_for_bomb
 	inc bomb1.counter
@@ -670,6 +687,8 @@ checkkeypressed PROC
             jz temp2
             cmp ah , 57
 			jz space
+			cmp ah, F4Scancode
+			jz tempexit1
             jmp tempfinish1
                 
 isup:
@@ -797,6 +816,7 @@ isleft:
 			drawpic bomberx,bomberY,bomerData
 			updategrid bomberx , bomberY , p1
 			jmp finish
+tempexit1: 	jmp exit					
 nodraw4:
 			
 			
@@ -846,6 +866,8 @@ checkkeypressed2 PROC
             jz temp2_22_2
             cmp ah , 15
 			jz tab
+			cmp ah, F4Scancode
+			jz tempexit2
             jmp temp2_2finish21_2
                 
 isup2:
@@ -973,6 +995,7 @@ isleft2:
 			drawpic bomber2X,bomber2Y,bomerData
 			updategrid bomber2X , bomber2Y , p2
 			jmp finish2
+tempexit2:jmp exit			
 nodraw24_2:
 			
 			

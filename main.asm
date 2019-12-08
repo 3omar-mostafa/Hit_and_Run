@@ -1,6 +1,6 @@
 .Model Small
 .386 ; sets the instruction set of 80386 prosessor
-.Stack 64
+.Stack 2048
 .Data
 
 INCLUDE inout.inc
@@ -8,6 +8,7 @@ INCLUDE inout.inc
 ; This is an external PROC that is defined in welcome.asm
 ; The linker will join them
 EXTRN displayWelcomeScreen:NEAR
+EXTRN MenuScreen:NEAR
 
 .Code
 MAIN PROC FAR
@@ -17,9 +18,9 @@ MAIN PROC FAR
 	callSwitchToGraphicsMode
 
 	CALL displayWelcomeScreen
+	CALL MenuScreen
 	
 	; Press any key to exit
-	callWaitForAnyKey
 	callSwitchToTextMode
 	CALL exit
     

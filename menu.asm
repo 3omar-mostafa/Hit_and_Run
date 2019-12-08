@@ -1,8 +1,9 @@
 ; This file displays the main menu
 
 .MODEL SMALL
-.STACK 1024
+.STACK 2048
 .386 ; sets the instruction set of 80386 prosessor
+
 .DATA
 
 F1Scancode  EQU  3Bh
@@ -11,6 +12,7 @@ F3Scancode  EQU  3Dh
 F4Scancode  EQU  3Eh
 ESCScancode EQU  01h
 
+stackIP dw 0
 
 imagewidth  EQU 200
 imageheight EQU 200
@@ -23,20 +25,23 @@ menuData DB ?
 pressedKeyScanCode DB ?
 
 EXTRN Graphics:FAR
+INCLUDE inout.inc
 
 .CODE
-INCLUDE inout.inc
+
 
 PUBLIC MenuScreen
 
 
-MenuScreen PROC FAR
+MenuScreen PROC
 	
 	MOV AX , @DATA
 	MOV DS , AX
 
+	mov stackIP , sp
 start:
 
+	mov positionInFile , 0
 	callSwitchToGraphicsMode
 
 	callOpenFile menuFilename,menuFilehandle
@@ -106,21 +111,16 @@ getKey:
 	start_chatting:
 
 	
-	JMP start
+	JMP exit
 	
-;----------------------------------
-
 	start_game:
 	CALL Graphics
-	jmp exit
-	
-	
 	JMP start
 	
 exit:
-	;RET
 	
-callSwitchToTextMode
+	mov sp , stackIP
+	callSwitchToTextMode
 	
 	; return control to operating system
     MOV AH , 4ch
@@ -128,4 +128,4 @@ callSwitchToTextMode
 	
 MenuScreen ENDP
 
-END MenuScreen
+END

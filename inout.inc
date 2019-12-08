@@ -14,8 +14,8 @@ EXTRN switchToGraphicsMode:NEAR
 EXTRN openFile:NEAR
 EXTRN loadData:NEAR
 EXTRN closeFile:NEAR
+EXTRN spaceforprinting:BYTE
 
-spaceforprinting db '      ','$'
 writescore2 macro score
            pusha
            ;;;set cursor;;;
@@ -125,7 +125,6 @@ GetCurrentTime macro time
 			mov time , dh
 			
 			popa
-            
             
 endm GetCurrentTime 
 
@@ -249,6 +248,8 @@ ENDM callCloseFile
 printnum MACRO inputdata ; inputdata is assumed as Word variable
     LOCAL start , print ; MUST be at the 2nd line , DO NOT LEAVE EMPTY LINE
  
+	pusha
+	
     MOVzx AX , inputdata
     MOV CX , 0
     MOV DX , 0
@@ -270,4 +271,28 @@ printnum MACRO inputdata ; inputdata is assumed as Word variable
         INT 21h
     LOOP print
 
+	popa
 ENDM printnum
+
+
+printTime MACRO
+
+   MOV DH , 0
+   MOV DL , 18
+   MOV BH , 0
+   MOV AH , 2
+   INT 10h
+   mov ah , 9
+   mov dl , offset spaceforprinting
+   int 21h
+
+
+   MOV DH , 0
+   MOV DL , 18
+   MOV BH , 0
+   MOV AH , 2
+   INT 10h
+   printnum gametimer
+
+
+ENDM printTime
