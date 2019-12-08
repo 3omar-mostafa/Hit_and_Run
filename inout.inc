@@ -15,7 +15,7 @@ EXTRN openFile:NEAR
 EXTRN loadData:NEAR
 EXTRN closeFile:NEAR
 
-
+spaceforprinting db '      ','$'
 writescore2 macro score
            pusha
            ;;;set cursor;;;
@@ -28,7 +28,21 @@ writescore2 macro score
            mov ah , 2
            mov dl , ':'
            int 21h
-           ;;;;;;;;;;;;
+           ;;;;;;;;;;;;nn
+		   MOV DH , 00
+           MOV DL , 3H
+           MOV BH , 0
+           MOV AH , 2
+           INT 10h
+		   mov ah , 9
+		   mov dl , offset spaceforprinting
+		   int 21h
+		   MOV DH , 00
+           MOV DL , 3H
+           MOV BH , 0
+           MOV AH , 2
+           INT 10h
+		   ;;;;;;;;;;;;nn
 		   mov ax , score
            printnum ax
            popa
@@ -46,7 +60,21 @@ writescore1 macro score
            mov ah , 2
            mov dl , ':'
            int 21h
-           ;;;;;;;;;;;;
+           ;;;;;;;;;;;nn
+		   MOV DH , 00
+           MOV DL , 1AH
+           MOV BH , 0
+           MOV AH , 2
+           INT 10h
+		   mov ah , 9
+		   mov dl , offset spaceforprinting
+		   int 21h
+		   MOV DH , 00
+           MOV DL , 1AH
+           MOV BH , 0
+           MOV AH , 2
+           INT 10h
+		   ;;;;;;;;;;;;nn
 		   mov ax , score
            printnum ax
            popa

@@ -240,6 +240,8 @@ pusha
 	decrease_score1:
 	dec heart1
 	writeheart1 heart1
+	cmp heart1,0
+	je exit
 	cmp score1 , 0
 	je _finish
 	mov cx , 200
@@ -250,6 +252,8 @@ pusha
 	 increase_score1:
 	    dec heart1
 	 writeheart1 heart1
+	 cmp heart1,0
+	je exit
 	 mov cx , 200
 	 add score2,cx
 	 writescore2 score2
@@ -278,6 +282,8 @@ pusha
 	 
 	  dec heart2
 	  writeheart2 heart2
+	  cmp heart2,0
+	je exit
 	cmp score2 ,0
 	je _finish
 	mov cx , 200
@@ -288,6 +294,8 @@ pusha
 	 increase_score2:
 	    dec heart2
 	 writeheart2 heart2
+	 cmp heart2,0
+	je exit
 	 mov cx , 200
 	 add score1,cx
 	 writescore1 score1
@@ -584,13 +592,17 @@ explode2:
 
   
   ;Change to Text MODE
+   exit:
   MOV AH,0     
   MOV AL,03h
   INT 10h 
 
   ; return control to operating system
+ 
   MOV AH , 4ch
   INT 21H
+  
+  
   
 MAIN ENDP
 
