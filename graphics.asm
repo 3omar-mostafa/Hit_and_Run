@@ -61,9 +61,9 @@ time db ?
 	coinFilehandle DW ?
 	coinData DB imagewidth*imageheight dup(2)
 	
-	;heartFilename DB 'bombdown.img', 0
-	;heartFilehandle DW ?
-	;heartData DB imagewidth*imageheight dup(2)
+	heartFilename DB 'heart.img', 0
+	heartFilehandle DW ?
+	heartData DB imagewidth*imageheight dup(2)
 
 
 ; set bit in Most signeficant bit refers to block (forbidden movement)
@@ -182,15 +182,15 @@ LEA BX , imageData ; BL contains index at the current drawn pixel
 	push si
 	push di
 	push bp
-	mov si ,x
-	mov bp ,x
+	mov si,x
+	mov bp,x
 	mov di,y
-  MOV CX,x ; x1
-  MOV DX,y ; y1
-	call drawpixel 
-  pop bp
+    MOV CX,x ; x1
+    MOV DX,y ; y1
+    call drawpixel 
+    pop bp
 	pop di
-  pop si
+    pop si
 endm drawpic 
 
 
@@ -283,7 +283,8 @@ pusha
 	  dec heart2
 	  writeheart2 heart2
 	  cmp heart2,0
-	je exit
+	 
+	 je exit
 	cmp score2 ,0
 	je _finish
 	mov cx , 200
@@ -295,6 +296,7 @@ pusha
 	    dec heart2
 	 writeheart2 heart2
 	 cmp heart2,0
+	 
 	je exit
 	 mov cx , 200
 	 add score1,cx
@@ -381,6 +383,7 @@ ENDM checkBlock
 
 call loadimages
 
+
 	
 	MOV AH,0ch
 	MOV CX , 0
@@ -417,6 +420,10 @@ JNE drawLoop
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;N
 	drawpic bomber2x,bomber2Y,bomerData
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;N
+	drawpic 80 , 0 , heartData
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;N
+	drawpic 288 , 0 , heartData
+	
     writescore1 score1
 	writescore2 score2
 	writeheart1 heart1
@@ -593,6 +600,10 @@ explode2:
   
   ;Change to Text MODE
    exit:
+   
+   ;;;;;;;;;;;;;;;;;;;;;;;;popa as we push before p1 lable when heart=0 so wemust pusha at clicking f4
+   popa
+   
   MOV AH,0     
   MOV AL,03h
   INT 10h 
@@ -1057,9 +1068,9 @@ loadimages proc
 		callCloseFile coinFilehandle
 		
 		;;;;;;;;;;;;;;;;load heart ;;;;;;;;;;;;;;;;;;;;;;;;
-		;callOpenFile bombdownFilename,bombdownFilehandle
-		;callLoadData bombdownFilehandle,bombdownData,imagewidth,imageheight
-		;callCloseFile bombdownFilehandle
+		callOpenFile heartFilename,heartFilehandle
+		callLoadData heartFilehandle,heartData,imagewidth,imageheight
+		callCloseFile heartFilehandle
 		
 		ret
 
