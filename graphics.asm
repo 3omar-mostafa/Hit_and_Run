@@ -477,11 +477,11 @@ ___label:
 	call checkkeypressed2
 	ClearBuffer
 	
-	cmp bomb1.counter , 3
+	cmp bomb1.counter , 2
 	je explode 
 	
 	;;;;;;;;;;;;;;;;;;;;;nn
-	cmp bomb2.counter , 3
+	cmp bomb2.counter , 2
 	je explode2 
 	;;;;;;;;;;;;;;;;;;;;;nn
 	
@@ -798,7 +798,7 @@ nodraw4:
 			jmp finish
 space:			
 			
-			cmp bomb1.counter,3
+			cmp bomb1.counter,2
 			jb finish
 			
             mov ax, bomberx
@@ -974,7 +974,7 @@ nodraw24_2:
 			jmp finish2
 tab:			
 			
-			cmp bomb2.counter,3
+			cmp bomb2.counter,2
 			jb finish2
 			
             mov ax, bomber2X
