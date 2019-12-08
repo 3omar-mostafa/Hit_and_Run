@@ -1,6 +1,6 @@
 .Model COMPACT
 .386
-.Stack 128
+.Stack 1024
 .Data
 include inout.inc
 test1 dw ?
@@ -98,9 +98,9 @@ grid DB X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , 
 
 .Code
 
+PUBLIC Graphics
 
-
-MAIN PROC FAR
+Graphics PROC FAR
   MOV AX , @DATA
   MOV DS , AX
   
@@ -602,27 +602,10 @@ explode2:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-
-  ; Press any key to exit
-  MOV AH , 0
-  INT 16h
-  
-
-  
-  ;Change to Text MODE
-   exit:
-  MOV AH,0     
-  MOV AL,03h
-  INT 10h 
-
-  ; return control to operating system
- 
-  MOV AH , 4ch
-  INT 21H
-  
-  
-  
-MAIN ENDP
+; return and exit
+exit:
+	RETF
+Graphics ENDP
 
 
 drawpixel proc
@@ -1079,4 +1062,4 @@ loadimages proc
 
 loadimages endp
 
-END MAIN
+END

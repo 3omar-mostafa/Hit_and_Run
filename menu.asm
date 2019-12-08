@@ -1,7 +1,7 @@
 ; This file displays the main menu
 
 .MODEL SMALL
-.STACK 64
+.STACK 1024
 .386 ; sets the instruction set of 80386 prosessor
 .DATA
 
@@ -22,7 +22,7 @@ menuData DB ?
 
 pressedKeyScanCode DB ?
 
-;EXTRN Graphics:FAR
+EXTRN Graphics:FAR
 
 .CODE
 INCLUDE inout.inc
@@ -106,21 +106,26 @@ getKey:
 	start_chatting:
 
 	
-	JMP exit
+	JMP start
 	
+;----------------------------------
+
 	start_game:
-	;CALL Graphics
-	JMP exit
+	CALL Graphics
+	jmp exit
+	
+	
+	JMP start
 	
 exit:
 	;RET
 	
 callSwitchToTextMode
 	
-	    ; return control to operating system
+	; return control to operating system
     MOV AH , 4ch
     INT 21H
 	
 MenuScreen ENDP
 
-END
+END MenuScreen
