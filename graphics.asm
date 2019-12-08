@@ -2,6 +2,11 @@
 .STACK 2048
 .386 ; sets the instruction set of 80386 prosessor
 
+
+
+
+EXTRN INDATAP1:BYTE
+EXTRN INDATAP2:BYTE
 .DATA
 include inout.inc
 test1 dw ?
@@ -1064,6 +1069,22 @@ find1Darray PROC
 			
             RET
 find1Darray ENDP
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 loadimages proc

@@ -18,9 +18,28 @@ EXTRN spaceforprinting:BYTE
 
 writescore2 macro score
            pusha
+		   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;NN
+		   MOV DH,00
+		   MOV DL,01
+		   MOV BH,0
+		   MOV AH,2
+		   INT 10H
+		
+		
+		
+		
+		   MOV AH ,9
+		   MOV DX, OFFSET INDATAP1
+		   ADD DX,2
+		   INT 21H
+		   
+		   
+		   
+		   
+		   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;NN
            ;;;set cursor;;;
            MOV DH , 00
-           MOV DL , 2H
+           MOV DL , 0DH
            MOV BH , 0
            MOV AH , 2
            INT 10h
@@ -30,7 +49,7 @@ writescore2 macro score
            int 21h
            ;;;;;;;;;;;;nn
 		   MOV DH , 00
-           MOV DL , 3H
+           MOV DL , 0EH
            MOV BH , 0
            MOV AH , 2
            INT 10h
@@ -38,7 +57,7 @@ writescore2 macro score
 		   mov dl , offset spaceforprinting
 		   int 21h
 		   MOV DH , 00
-           MOV DL , 3H
+           MOV DL , 0EH
            MOV BH , 0
            MOV AH , 2
            INT 10h
@@ -50,9 +69,20 @@ ENDM       writescore2
 
 writescore1 macro score
            pusha
+		    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;NN
+		   MOV DH,00
+		   MOV DL,15
+		   MOV BH,0
+		   MOV AH,2
+		   INT 10H
+		   MOV AH ,9
+		   MOV DX, OFFSET INDATAP2
+		   ADD DX,2
+		   INT 21H
+		   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;NN
            ;;;set cursor;;;
            MOV DH , 00
-           MOV DL , 19H
+           MOV DL , 1BH
            MOV BH , 0
            MOV AH , 2
            INT 10h
@@ -62,7 +92,7 @@ writescore1 macro score
            int 21h
            ;;;;;;;;;;;nn
 		   MOV DH , 00
-           MOV DL , 1AH
+           MOV DL , 1CH
            MOV BH , 0
            MOV AH , 2
            INT 10h
@@ -70,7 +100,7 @@ writescore1 macro score
 		   mov dl , offset spaceforprinting
 		   int 21h
 		   MOV DH , 00
-           MOV DL , 1AH
+           MOV DL , 1CH
            MOV BH , 0
            MOV AH , 2
            INT 10h
@@ -85,7 +115,7 @@ writeheart2 macro heart
            pusha
            ;;;set cursor;;;
            MOV DH , 00
-           MOV DL , 0ch
+           MOV DL , 13h
            MOV BH , 0
            MOV AH , 2
            INT 10h
