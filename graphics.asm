@@ -1,19 +1,23 @@
-.Model COMPACT
-.386
-.Stack 128
-.Data
+.MODEL SMALL
+.STACK 2048
+.386 ; sets the instruction set of 80386 prosessor
+
+.DATA
 include inout.inc
 test1 dw ?
 test2 dw ?
 time db ?
+
+stackIP dw ?
 	last_time db ?
 	y_old DW ?
 	gridWidth EQU 320
 	gridHeight EQU 144
 	
+	positionInGridFile DW 0
 	gridFilename DB 'grid.img', 0
 	gridFilehandle DW ?
-	gridData DB gridWidth*gridHeight dup(2)
+	gridData DB 0
 	
 	imagewidth EQU 16
 	imageheight EQU 16
@@ -41,22 +45,6 @@ time db ?
 	bombData DB imagewidth*imageheight dup(2)
 	
 	
-	bombrightFilename DB 'bombrit.img', 0
-	bombrightFilehandle DW ?
-	bombrightData DB imagewidth*imageheight dup(2)
-	
-	bombleftFilename DB 'bombleft.img', 0
-	bombleftFilehandle DW ?
-	bombleftData DB imagewidth*imageheight dup(2)
-	
-	bombupFilename DB 'bombup.img', 0
-	bombupFilehandle DW ?
-	bombupData DB imagewidth*imageheight dup(2)
-	
-	bombdownFilename DB 'bombdown.img', 0
-	bombdownFilehandle DW ?
-	bombdownData DB imagewidth*imageheight dup(2)
-	
 	coinFilename DB 'coin.img', 0
 	coinFilehandle DW ?
 	coinData DB imagewidth*imageheight dup(2)
@@ -78,6 +66,7 @@ time db ?
 	C EQU  00000010b ; 2
 	H EQU  00000100b ; 4
 	
+	Bi db  10000001b ; 129
 	
 	F_B EQU F or B
 	C_B EQU C or B
@@ -97,15 +86,33 @@ grid DB X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , 
 
 .Code
 
+PUBLIC Graphics
 
-
-MAIN PROC FAR
+Graphics PROC
   MOV AX , @DATA
   MOV DS , AX
+  
   
   MOV AH, 0
   MOV AL, 13h
   INT 10h
+  
+	mov stackIP , sp
+	
+	
+	mov positionInGridFile , 0
+	mov bomberx , 288
+	mov bomberY , 128
+    mov bomber2x , 16
+	mov bomber2Y , 32
+	mov score1 , 0000
+	mov score2 , 0000
+	mov heart1 , 3
+	mov heart2 , 3
+	
+	
+	call initializeGrid
+	
 	
 	 bomb struc
 		bombx dw 0
@@ -381,37 +388,54 @@ ENDM checkBlock
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;start of the program;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
 call loadimages
 
 
+	;;;;;;;;;;;;;;load and draw grid;;;;;;;;;;;;;;;;
+	callOpenFile gridFilename,gridFilehandle
 	
-	MOV AH,0ch
-	MOV CX , 0
-	MOV DX , 0
-
 	
 	LEA BX , gridData ; BL contains index at the current drawn pixel
 	
-  MOV CX,0 ; x1
-  MOV DX,16 ; y1
-  MOV AH,0ch
-	
-	
+	MOV CX,0 ; x1
+	MOV DX,16 ; y1
+	MOV AH,0ch
+		
 ; Drawing loop
 drawLoop:
 
-  MOV AL,[BX]
-  INT 10h 
-  INC CX
-  INC BX
-  CMP CX,320 
-JNE drawLoop 
-	
-  MOV CX , 0
-  INC DX
-  CMP DX , 160
-JNE drawLoop
+	pusha
+	;JUMP TO POSITION INSIDE THE FILE.                            <==============
+	mov  ah, 42h          	;SERVICE FOR SEEK.
+	mov  al, 0            	;START FROM THE BEGINNING OF FILE.
+	mov  bx, gridFilehandle  	;FILE.
+	mov  cx, 0            	;THE FILE POSITION MUST BE PLACED IN
+	mov  dx, positionInGridFile   ;CX:DX, EXAMPLE, TO JUMP TO POSITION
+	int  21h
 
+	;READ ONE CHAR FROM CURRENT FILE POSITION.
+	mov  ah, 3fh          ;SERVICE TO READ FROM FILE.
+	mov  bx, gridFilehandle
+	mov  cx, 1            ;HOW MANY BYTES TO READ.
+	inc positionInGridFile
+	lea  dx, gridData       ;WHERE TO STORE THE READ BYTES.  
+	int  21h
+		
+	popa
+		
+	MOV AL,[BX]
+	INT 10h 
+	INC CX
+	CMP CX,320 
+JNE drawLoop 
+	MOV CX , 0
+	INC DX
+	CMP DX , 160
+JNE drawLoop
+	
+	callCloseFile gridFilehandle
+	
 
 ;;;;;;;;;;;;;;;;;;;;;;;draw pomerman;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -429,6 +453,7 @@ JNE drawLoop
 	writeheart1 heart1
 	writeheart2 heart2
 	
+
 	LEA bp , grid	
 ___label:
 	
@@ -561,6 +586,7 @@ explode2:
 	;--------------------------------------------
 	
 	
+	
 	updategrid bomb2.bombx , bomb2.bomby , G
 
 	clearBlock bomb2.bombx , bomb2.bomby
@@ -591,31 +617,17 @@ explode2:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
+; return and exit
+exit:
+	
+	mov sp , stackIP
 
-  ; Press any key to exit
-  MOV AH , 0
-  INT 16h
-  
 
-  
-  ;Change to Text MODE
-   exit:
-   
    ;;;;;;;;;;;;;;;;;;;;;;;;popa as we push before p1 lable when heart=0 so wemust pusha at clicking f4
-   popa
-   
-  MOV AH,0     
-  MOV AL,03h
-  INT 10h 
+   ;popa
 
-  ; return control to operating system
- 
-  MOV AH , 4ch
-  INT 21H
-  
-  
-  
-MAIN ENDP
+	RET
+Graphics ENDP
 
 
 drawpixel proc
@@ -1032,10 +1044,6 @@ find1Darray ENDP
 
 
 loadimages proc
-        ;;;;;;;;;;;;;;load grid;;;;;;;;;;;;;;;;
-		callOpenFile gridFilename,gridFilehandle
-		callLoadData gridFilehandle,gridData,gridWidth,gridHeight
-		callCloseFile gridFilehandle
         ;;;;;;;;;;;;;;load bomb;;;;;;;;;;;;;;;;		
 		callOpenFile bombFilename,bombFilehandle
 		callLoadData bombFilehandle,bombData,imagewidth,imageheight
@@ -1076,4 +1084,183 @@ loadimages proc
 
 loadimages endp
 
-END MAIN
+
+initializeGrid proc 
+
+	mov al , X
+	lea bx , grid
+	mov cx,20
+fill_f:
+	mov [BX] , al
+	inc bx
+	loop fill_f
+	
+	
+	
+	MOV [BX] , al
+	INC BX
+	MOV AL , G
+	MOV [BX] , AL
+	INC BX
+	MOV [BX] , AL
+	inc bx
+
+	
+	MOV CX , 16
+	CALL fillBricks
+
+	
+	MOV AL , X
+	MOV [BX] , AL
+	INC BX
+	
+	call fillLine2
+	
+	
+	MOV AL , X
+	MOV [BX] , AL
+	INC BX
+	
+	MOV CX , 18
+	CALL fillBricks
+	
+	
+	MOV AL , X
+	MOV [BX] , AL
+	INC BX
+	
+	call fillLine2
+	
+	
+		
+	MOV AL , X
+	MOV [BX] , AL
+	INC BX
+	
+	MOV CX , 18
+	CALL fillBricks
+	
+	
+	MOV AL , X
+	MOV [BX] , AL
+	INC BX
+	
+	
+	call fillLine2
+	
+	
+		
+	MOV AL , X
+	MOV [BX] , AL
+	INC BX
+	
+	MOV CX , 16
+	CALL fillBricks
+	
+	
+	MOV AL , G
+	MOV [BX] , AL
+	INC BX
+	
+	MOV AL , G
+	MOV [BX] , AL
+	INC BX
+	
+	MOV AL , X
+	MOV [BX] , AL
+	INC BX
+	
+	lea bx , grid
+	add bx,160
+	mov cx,19
+fill_l:
+	mov [BX] , al
+	inc bx
+	loop fill_l
+	 
+	RET
+initializeGrid endp
+
+
+; START FROM bX FOR CX TIMES
+fillBricks PROC
+
+MOV AL , B
+
+fillBrick:
+	mov [BX] , al
+	inc BX
+	LOOP fillBrick
+
+RET
+fillBricks ENDP
+
+; start from bx for 20 times
+fillLine2 PROC
+
+MOV AL , X
+MOV [BX] , AL
+INC BX
+MOV AL , G
+MOV [BX] , AL
+INC BX
+MOV AL , X
+MOV [BX] , AL
+INC BX
+MOV AL , B
+MOV [BX] , AL
+INC BX
+MOV AL , X
+MOV [BX] , AL
+INC BX
+MOV AL , G
+MOV [BX] , AL
+INC BX
+MOV AL , X
+MOV [BX] , AL
+INC BX
+MOV AL , B
+MOV [BX] , AL
+INC BX
+MOV AL , X
+MOV [BX] , AL
+INC BX
+MOV AL , G
+MOV [BX] , AL
+INC BX
+MOV AL , G
+MOV [BX] , AL
+INC BX
+MOV AL , X
+MOV [BX] , AL
+INC BX
+MOV AL , B
+MOV [BX] , AL
+INC BX
+MOV AL , X
+MOV [BX] , AL
+INC BX
+MOV AL , G
+MOV [BX] , AL 
+inc bx
+MOV AL , X
+MOV [BX] , AL
+INC BX
+MOV AL , B
+MOV [BX] , AL
+INC BX
+MOV AL , X
+MOV [BX] , AL
+INC BX
+MOV AL , G
+MOV [BX] , AL
+INC BX
+MOV AL , X
+MOV [BX] , AL
+INC BX
+
+RET
+fillLine2 ENDP
+
+
+END

@@ -4,7 +4,7 @@
 ; DO NOT CALL THESE PROCs DIRECTLY
 
 .MODEL SMALL
-.STACK 64
+.STACK 1024
 .386 ; sets the instruction set of 80386 prosessor
 .CODE
 
