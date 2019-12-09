@@ -160,7 +160,17 @@ draw_R MACRO color , start_x , start_y , lineWidth
 
 ENDM draw_R
 
+draw_S MACRO color , start_x , start_y , lineWidth
+    LOCAL end_y
+    end_y EQU start_y + 8*lineWidth
+    
+    callDrawRowRight   color  lineWidth start_x       			start_y                       			start_x+5*lineWidth
+    callDrawColumnUp   color  lineWidth start_x       			start_y                       			start_y+lineWidth+(end_y-start_y-lineWidth)/2
+    callDrawRowLeft    color  lineWidth start_x       			start_y+(end_y-start_y-lineWidth)/2  	start_x+5*lineWidth
+    callDrawColumnUp   color  lineWidth start_x+4*lineWidth    start_y+(end_y-start_y-lineWidth)/2  	end_y
+    callDrawRowRight   color  lineWidth start_x      			end_y-lineWidth                      	start_x+5*lineWidth
 
+ENDM draw_S
 
 draw_T MACRO color , start_x , start_y , lineWidth
     LOCAL end_y
@@ -204,11 +214,11 @@ draw_Y MACRO color , start_x , start_y , lineWidth
     callDrawColumnUp    color lineWidth start_x          	  start_y      			start_y+lineWidth
     callDrawColumnUp    color lineWidth start_x+lineWidth  	  start_y+lineWidth		start_y+2*lineWidth
 	
-    callDrawRowLeft     color lineWidth start_x+2*lineWidth   start_y+3*lineWidth  	start_x+3*lineWidth
+    callDrawRowLeft     color lineWidth start_x+2*lineWidth   start_y+2*lineWidth  	start_x+3*lineWidth
 	
-	callDrawColumnDown    color lineWidth start_x+3*lineWidth	  start_y      			start_y+4*lineWidth
-    callDrawColumnDown    color lineWidth start_x+4*lineWidth  	  start_y+lineWidth		start_y+5*lineWidth
 
-    callDrawColumnUp  color lineWidth start_x+2*lineWidth   start_y+3*lineWidth 		end_y-lineWidth
+    callDrawColumnDown    color lineWidth start_x+3*lineWidth  	  start_y+lineWidth		start_y+2*lineWidth
+	callDrawColumnDown    color lineWidth start_x+4*lineWidth	  start_y      			start_y+lineWidth
+    callDrawColumnUp  color lineWidth start_x+2*lineWidth   start_y+3*lineWidth 		end_y
 
 ENDM draw_Y

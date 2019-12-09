@@ -19,6 +19,9 @@ masm main.asm /z /Zi /Zd /v    > main.log ,%main ;
 If not exist main.obj echo Assembling Failed , Check main.log for errors
 If not exist main.obj goto end
 
+masm results.asm /z /Zi /Zd /v    > results.log ,%results ;
+If not exist results.obj echo Assembling Failed , Check results.log for errors
+If not exist results.obj goto end
 
 masm draw.asm /z /Zi /Zd /v    > draw.log ,%draw ;
 If not exist draw.obj echo Assembling Failed , Check draw.log for errors
@@ -40,7 +43,7 @@ masm inout.asm /z /Zi /Zd /v    > inout.log ,%inout ;
 If not exist inout.obj echo Assembling Failed , Check inout.log for errors
 If not exist inout.obj goto end
 
-link main.obj welcome.obj inout.obj draw.obj graphics.obj menu.obj > link.log ,game.exe,nul;
+link main.obj welcome.obj inout.obj draw.obj graphics.obj menu.obj results.obj > link.log ,game.exe,nul;
 If not exist game.exe echo Linking Failed , Check link.log for errors
 If not exist game.exe goto end
 
