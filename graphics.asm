@@ -95,18 +95,23 @@ grid DB X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , 
 
 
 .Code
+EXTRN displayResults:NEAR
 
 PUBLIC Graphics
 PUBLIC gametimer
+PUBLIC score1
+PUBLIC score2
+PUBLIC heart1
+PUBLIC heart2
 
 Graphics PROC
-  MOV AX , @DATA
-  MOV DS , AX
+	MOV AX , @DATA
+	MOV DS , AX
   
   
-  MOV AH, 0
-  MOV AL, 13h
-  INT 10h
+	MOV AH, 0
+	MOV AL, 13h
+	INT 10h
   
 	mov stackIP , sp
 	
@@ -242,14 +247,15 @@ pusha
 	clearBlock x1 , y1
 	JMP _finish
 	
-	; TODO to be completed
+	
 	_label_P1: 
 	clearBlock x1 , y1
 	
 	mov bomberx ,288
 	mov bombery , 128
+	drawpic bomberx , bombery , bomerData
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;nn
-	;push cx
+	
 	mov cx , bombtype
 	cmp cx,1
 	je decrease_score1
@@ -277,17 +283,18 @@ pusha
 	 add score2,cx
 	 writescore2 score2
 	
-	;pop cx
+	
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;nn
-	;drawpic bomberx,bombery,bomerData
+	
 	JMP _finish
 	
-	; TODO to be completed
 	_label_P2: 
 	clearBlock x1 , y1
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;N
 	mov bomber2x ,16
 	mov bomber2y ,32
+	drawpic bomber2x , bomber2y , bomerData
+
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;N
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;nn
 	;push cx
@@ -302,7 +309,7 @@ pusha
 	  dec heart2
 	  writeheart2 heart2
 	  cmp heart2,0
-	   
+	 
 	 je exit
 	cmp score2 ,0
 
@@ -355,13 +362,6 @@ call find1Darray
 
 
 mov cl , DS:[BP][DI]
-;-----------------
-;printnum cl
-;	push ax
-;	MOV AH , 0
-;	INT 16h
-;	pop ax 
-;-----------------
 
 cmp cl , X
 je __finish
@@ -370,24 +370,6 @@ shl cl , 1
 shr cl , 1
 shr cl , 1
 shl cl , 1
-
-;-----------------
-;printnum cl
-;	push ax
-;	mov ah,2
-;	mov dl,','
-;	int 21h
-;	
-;	
-;	MOV AH , 0
-;	INT 16h
-;	
-;	mov ah,2
-;	mov dl,','
-;	int 21h
-;	pop ax 
-;	
-;-----------------
 
 
 updategrid x_1 , y_1 , cl 
@@ -481,6 +463,8 @@ ___label:
 	
 	dec gametimer
 	
+	CMP gametimer , 0
+	je exit
 	
 temptime:
 	
@@ -518,7 +502,7 @@ temptime:
 	jmp ___label
 	
 explode:
-	call BOOMmusic
+	
 	mov bomb1.counter , 5 ; 5 is any arbitrary value above 3 
 	mov ax , bomb1.bomby
 	mov bx , bomb1.bombx
@@ -529,8 +513,6 @@ explode:
 	
 	push bx
 	push ax
-	
-	;call find1Darray
 
 	;--------------------------------------------
 	
@@ -559,43 +541,11 @@ explode:
 	SUB AX , 32
 	checkBlock BX , AX,1
 	
-	;jmp ___label
-	
-	
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;nn	
-	;ClearBuffer
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;nn	
-	
-	
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;N
-;___label2:
-	
-	
-	; GetCurrentTime time
-	; mov al,time
-	; cmp al,last_time
-	; je wait_for_bomb2
-	; inc bomb2.counter
-	
-	
-	; wait_for_bomb2:
-	; mov last_time,al
-	
-	
-	; call checkkeypressed2
-	; ClearBuffer
-	
-	;cmp bomb2.counter , 3
-	;je explode2 
-	
 	jmp ___label
-	;jmp ___label2
 	
 explode2:
   
-      call BOOMmusic
+      
 	
 	mov bomb2.counter , 5 ; 5 is any arbitrary value above 3 
 	mov ax , bomb2.bomby
@@ -605,8 +555,6 @@ explode2:
 	push bx
 	push ax
 	
-	;call find1Darray
-
 	;--------------------------------------------
 	
 	
@@ -637,19 +585,15 @@ explode2:
 	
 	
 	jmp ___label
-	;jmp ___label2
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 ; return and exit
 exit:
-
-	call music
+	
+	call displayResults
+	
 	mov sp , stackIP
-
-
-   ;;;;;;;;;;;;;;;;;;;;;;;;popa as we push before p1 lable when heart=0 so wemust pusha at clicking f4
-   ;popa
 
 	RET
 Graphics ENDP
@@ -848,7 +792,7 @@ space:
 			mov bomb1.counter , 0
 		
 			updategrid bomberX , bomberY , B1
-			;don't forget to ubdate the grid to ground
+			
 			
 			
 			
@@ -1022,12 +966,10 @@ tab:
 			mov bomb2.bombx , ax
 			mov ax, bomber2Y
 			mov bomb2.bomby , ax
-			;GetCurrentTime bomb1.to_be_drawn
 			mov bomb2.to_be_drawn , 1
 			mov bomb2.counter , 0
 		
 			updategrid bomber2X , bomber2Y , B1
-			;don't forget to ubdate the grid to ground
 			
 			
 			
@@ -1090,7 +1032,6 @@ find1Darray ENDP
 
 
 
-
 loadimages proc
         ;;;;;;;;;;;;;;load bomb;;;;;;;;;;;;;;;;		
 		callOpenFile bombFilename,bombFilehandle
@@ -1100,23 +1041,6 @@ loadimages proc
 		callOpenFile bomerFilename,bomerFilehandle
 		callLoadData bomerFilehandle,bomerData,imagewidth,imageheight
 		callCloseFile bomerFilehandle
-		
-		;;;;;;;;;;;;;;;;load bomb right;;;;;;;;;;;;;;;;;;;;;;;;
-		;callOpenFile bombrightFilename,bombrightFilehandle
-		;callLoadData bombrightFilehandle,bombrightData,imagewidth,imageheight
-		;callCloseFile bombrightFilehandle
-		;;;;;;;;;;;;;;;;load bomb left;;;;;;;;;;;;;;;;;;;;;;;;
-		;callOpenFile bombleftFilename,bombleftFilehandle
-		;callLoadData bombleftFilehandle,bombleftData,imagewidth,imageheight
-		;callCloseFile bombleftFilehandle
-		;;;;;;;;;;;;;;;load bomb up;;;;;;;;;;;;;;;;;;;;;;;;
-		;callOpenFile bombupFilename,bombupFilehandle
-		;callLoadData bombupFilehandle,bombupData,imagewidth,imageheight
-		;callCloseFile bombupFilehandle
-		;;;;;;;;;;;;;;;;load bomb down;;;;;;;;;;;;;;;;;;;;;;;;
-		;callOpenFile bombdownFilename,bombdownFilehandle
-		;callLoadData bombdownFilehandle,bombdownData,imagewidth,imageheight
-		;callCloseFile bombdownFilehandle
 		
 		;;;;;;;;;;;;;;;load coin ;;;;;;;;;;;;;;;;;;;;;;;;
 		callOpenFile coinFilename,coinFilehandle
@@ -1309,100 +1233,6 @@ INC BX
 
 RET
 fillLine2 ENDP
-
-
-
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;N
-music proc near 
-pusha
-mov     al, 182         ; Prepare the speaker for the
-        out     43h, al         ;  note.
-        mov     ax, 4560        ; Frequency number (in decimal)
-                                ;  for middle C.
-        out     42h, al         ; Output low byte.
-        mov     al, ah          ; Output high byte.
-        out     42h, al 
-        in      al, 61h         ; Turn on note (get value from
-                                ;  port 61h).
-        or      al, 00000011b   ; Set bits 1 and 0.
-        out     61h, al         ; Send new value.
-        mov     bx, 25          ; Pause for duration of note.
-.pause1:
-        mov     cx, 65535
-.pause2:
-        dec     cx
-        jne     .pause2
-        dec     bx
-        jne     .pause1
-        in      al, 61h         ; Turn off note (get value from
-                                ;  port 61h).
-        and     al, 11111100b   ; Reset bits 1 and 0.
-        out     61h, al
-		popa
-ret
-music endp 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;N
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;NN
-BOOMmusic proc NEAR
-push ax
-push bx
-push cx
-push dx
-sound :     
-
-MOV     DX,2000          ; Number of times to repeat whole routine.
-
-MOV     BX,1             ; Frequency value.
-
-MOV     AL, 10110110B    ; The Magic Number (use this binary number only)
-OUT     43H, AL          ; Send it to the initializing port 43H Timer 2.
-
-NEXT_FREQUENCY:          ; This is were we will jump back to 2000 times.
-
-MOV     AX, BX           ; Move our Frequency value into AX.
-
-OUT     42H, AL          ; Send LSB to port 42H.
-MOV     AL, AH           ; Move MSB into AL  
-OUT     42H, AL          ; Send MSB to port 42H.
-
-IN      AL, 61H          ; Get current value of port 61H.
-OR      AL, 00000011B    ; OR AL to this value, forcing first two bits high.
-OUT     61H, AL          ; Copy it to port 61H of the PPI Chip
-                         ; to turn ON the speaker.
-
-MOV     CX, 100          ; Repeat loop 100 times
-DELAY_LOOP:              ; Here is where we loop back too.
-LOOP    DELAY_LOOP       ; Jump repeatedly to DELAY_LOOP until CX = 0
-
-
-INC     BX               ; Incrementing the value of BX lowers 
-                         ; the frequency each time we repeat the
-                         ; whole routine
-
-DEC     DX               ; Decrement repeat routine count
-
-CMP     DX, 0            ; Is DX (repeat count) = to 0
-JNZ     NEXT_FREQUENCY   ; If not jump to NEXT_FREQUENCY
-                         ; and do whole routine again.
-
-                         ; Else DX = 0 time to turn speaker OFF
-
-IN      AL,61H           ; Get current value of port 61H.
-AND     AL,11111100B     ; AND AL to this value, forcing first two bits low.
-OUT     61H,AL           ; Copy it to port 61H of the PPI Chip
-                         ; to
-pop dx
-pop cx
-pop bx
-pop ax
-ret
-BOOMmusic endp
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;NN
-
 
 
 END
