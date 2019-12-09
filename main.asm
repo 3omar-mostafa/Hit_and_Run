@@ -3,8 +3,8 @@
 .Stack 2048
 .Data
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;nn
- INDATAP1 DB 16,?, 16 DUP('$')
- INDATAP2 DB 16,?, 16 DUP('$')
+INDATAP1 DB 13,?, 13 DUP('$')
+INDATAP2 DB 13,?, 13 DUP('$')
 ERRORMSG DB 'PLEASE ENTER YOUR NAME WITHOUT SPECIAL CHARACTERS OR NUMBERS AT FIRST','$'
 ENTERMSG DB 'PLEASE ENTER YOUR NAME','$'
 TRICKYMSG DB '                        ','$'

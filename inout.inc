@@ -20,7 +20,7 @@ writescore2 macro score
            pusha
 		   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;NN
 		   MOV DH,00
-		   MOV DL,01
+		   MOV DL,00
 		   MOV BH,0
 		   MOV AH,2
 		   INT 10H
@@ -39,7 +39,7 @@ writescore2 macro score
 		   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;NN
            ;;;set cursor;;;
            MOV DH , 00
-           MOV DL , 0DH
+           MOV DL , 06H
            MOV BH , 0
            MOV AH , 2
            INT 10h
@@ -49,7 +49,7 @@ writescore2 macro score
            int 21h
            ;;;;;;;;;;;;nn
 		   MOV DH , 00
-           MOV DL , 0EH
+           MOV DL , 07H
            MOV BH , 0
            MOV AH , 2
            INT 10h
@@ -57,7 +57,7 @@ writescore2 macro score
 		   mov dl , offset spaceforprinting
 		   int 21h
 		   MOV DH , 00
-           MOV DL , 0EH
+           MOV DL , 07H
            MOV BH , 0
            MOV AH , 2
            INT 10h
@@ -71,7 +71,7 @@ writescore1 macro score
            pusha
 		    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;NN
 		   MOV DH,00
-		   MOV DL,15
+		   MOV DL,18H
 		   MOV BH,0
 		   MOV AH,2
 		   INT 10H
@@ -82,7 +82,7 @@ writescore1 macro score
 		   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;NN
            ;;;set cursor;;;
            MOV DH , 00
-           MOV DL , 1BH
+           MOV DL , 1EH
            MOV BH , 0
            MOV AH , 2
            INT 10h
@@ -92,7 +92,7 @@ writescore1 macro score
            int 21h
            ;;;;;;;;;;;nn
 		   MOV DH , 00
-           MOV DL , 1CH
+           MOV DL , 1FH
            MOV BH , 0
            MOV AH , 2
            INT 10h
@@ -100,7 +100,7 @@ writescore1 macro score
 		   mov dl , offset spaceforprinting
 		   int 21h
 		   MOV DH , 00
-           MOV DL , 1CH
+           MOV DL ,1FH
            MOV BH , 0
            MOV AH , 2
            INT 10h
@@ -115,7 +115,7 @@ writeheart2 macro heart
            pusha
            ;;;set cursor;;;
            MOV DH , 00
-           MOV DL , 13h
+           MOV DL , 0Eh
            MOV BH , 0
            MOV AH , 2
            INT 10h

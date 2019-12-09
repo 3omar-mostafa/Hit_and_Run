@@ -8,7 +8,7 @@
 .386 ; sets the instruction set of 80386 prosessor
 .DATA
 
-spaceforprinting db '      ','$'
+spaceforprinting db '    ','$'
 
 
 .CODE

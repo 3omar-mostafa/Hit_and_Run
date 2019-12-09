@@ -4,9 +4,10 @@
 
 
 
-
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;N
 EXTRN INDATAP1:BYTE
 EXTRN INDATAP2:BYTE
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;N
 .DATA
 include inout.inc
 test1 dw ?
@@ -304,6 +305,7 @@ pusha
 	 
 	 je exit
 	cmp score2 ,0
+
 	je _finish
 	mov cx , 200
 	 sub score2,cx
@@ -455,7 +457,7 @@ JNE drawLoop
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;N
 	drawpic bomber2x,bomber2Y,bomerData
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;N
-	drawpic 80 , 0 , heartData
+	drawpic 96 , 0 , heartData
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;N
 	drawpic 288 , 0 , heartData
 	
