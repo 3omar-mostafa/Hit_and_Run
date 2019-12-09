@@ -72,16 +72,7 @@ stackIP dw ?
 	B2 EQU 10100000b ; 160
 	P1 EQU 00011000b ; 24
 	P2 EQU 00101000b ; 40
-	F  EQU 00001000b ; 8 -> powerup for bomb
-	C EQU  00000010b ; 2
-	H EQU  00000100b ; 4
 	
-	Bi db  10000001b ; 129
-	
-	F_B EQU F or B
-	C_B EQU C or B
-	H_B EQU H or B
-
 ;  	    0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19
 grid DB X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X
 	 DB X , G , G , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , X                                                                  
@@ -233,16 +224,6 @@ pusha
 	CMP type1 , P2 
 	JE _label_P2
 	
-	CMP type1 , F  
-	JE _label_F 
-	
-	CMP type1 , C  
-	JE _label_C 
-	
-	CMP type1 , H  
-	JE _label_H
-	
-	
 	_label_G:  
 	clearBlock x1 , y1
 	JMP _finish
@@ -297,7 +278,6 @@ pusha
 
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;N
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;nn
-	;push cx
 	mov cx , bombtype
 	cmp cx , 2
 	je decrease_score2
@@ -329,22 +309,9 @@ pusha
 	 add score1,cx
 	 writescore1 score1
 	
-	 ;pop cx
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;nn
 	
-	JMP _finish
 	
-	_label_F:  
-	;
-	JMP _finish
-
-	_label_C: 
-	drawpic x1 , y1 , coinData
-	JMP _finish
-	
-	_label_H:
-	;
-	JMP _finish
 	
 _finish:popa 
 
@@ -472,8 +439,6 @@ temptime:
 	je wait_for_bomb
 	inc bomb1.counter
 	
-	;wait_for_bomb:
-	;mov last_time,al
 	;;;;;;;;;;;;;;;;;;;;;n
 	GetCurrentTime time
 	mov al,time
@@ -787,7 +752,6 @@ space:
 			mov bomb1.bombx , ax
 			mov ax, bombery
 			mov bomb1.bomby , ax
-			;GetCurrentTime bomb1.to_be_drawn
 			mov bomb1.to_be_drawn , 1
 			mov bomb1.counter , 0
 		
