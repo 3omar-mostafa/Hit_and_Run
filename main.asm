@@ -15,6 +15,7 @@ INCLUDE inout.inc
 ; The linker will join them
 EXTRN displayWelcomeScreen:NEAR
 EXTRN MenuScreen:NEAR
+EXTRN music:NEAR
 PUBLIC INDATAP1
 PUBLIC INDATAP2
 .Code
@@ -23,7 +24,7 @@ MAIN PROC FAR
 	CALL initializeDataSegment
 	
 	callSwitchToGraphicsMode
-
+    call music
 	CALL displayWelcomeScreen
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;N
 	callSwitchToTextMode
