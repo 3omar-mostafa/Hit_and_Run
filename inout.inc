@@ -308,7 +308,7 @@ ENDM printnum
 printTime MACRO
 
    MOV DH , 0
-   MOV DL , 18
+   MOV DL , 19
    MOV BH , 0
    MOV AH , 2
    INT 10h
@@ -318,7 +318,7 @@ printTime MACRO
 
 
    MOV DH , 0
-   MOV DL , 18
+   MOV DL , 19
    MOV BH , 0
    MOV AH , 2
    INT 10h

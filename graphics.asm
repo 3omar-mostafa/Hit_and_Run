@@ -95,18 +95,23 @@ grid DB X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , 
 
 
 .Code
+EXTRN displayResults:NEAR
 
 PUBLIC Graphics
 PUBLIC gametimer
+PUBLIC score1
+PUBLIC score2
+PUBLIC heart1
+PUBLIC heart2
 
 Graphics PROC
-  MOV AX , @DATA
-  MOV DS , AX
+	MOV AX , @DATA
+	MOV DS , AX
   
   
-  MOV AH, 0
-  MOV AL, 13h
-  INT 10h
+	MOV AH, 0
+	MOV AL, 13h
+	INT 10h
   
 	mov stackIP , sp
 	
@@ -248,6 +253,7 @@ pusha
 	
 	mov bomberx ,288
 	mov bombery , 128
+	drawpic bomberx , bombery , bomerData
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;nn
 	;push cx
 	mov cx , bombtype
@@ -288,6 +294,8 @@ pusha
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;N
 	mov bomber2x ,16
 	mov bomber2y ,32
+	drawpic bomber2x , bomber2y , bomerData
+
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;N
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;nn
 	;push cx
@@ -481,6 +489,8 @@ ___label:
 	
 	dec gametimer
 	
+	CMP gametimer , 0
+	je exit
 	
 temptime:
 	
@@ -644,11 +654,9 @@ explode2:
 ; return and exit
 exit:
 	
+	call displayResults
+	
 	mov sp , stackIP
-
-
-   ;;;;;;;;;;;;;;;;;;;;;;;;popa as we push before p1 lable when heart=0 so wemust pusha at clicking f4
-   ;popa
 
 	RET
 Graphics ENDP

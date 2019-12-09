@@ -24,7 +24,7 @@ menuData DB ?
 
 pressedKeyScanCode DB ?
 
-EXTRN Graphics:FAR
+EXTRN Graphics:NEAR
 INCLUDE inout.inc
 
 .CODE

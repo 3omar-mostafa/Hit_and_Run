@@ -9,7 +9,7 @@
 message DB 'Press any key to Continue','$'
 
 ; shows the effect of drawing letters on the screen
-letterDrawingSpeed DB 255 ; MIN value is 1
+letterDrawingSpeed DB 60 ; MIN value is 1
 
 ; Sizes for letters :
 ; extra large , large , medium , small , extra small
