@@ -247,7 +247,7 @@ pusha
 	clearBlock x1 , y1
 	JMP _finish
 	
-	; TODO to be completed
+	
 	_label_P1: 
 	clearBlock x1 , y1
 	
@@ -255,7 +255,7 @@ pusha
 	mov bombery , 128
 	drawpic bomberx , bombery , bomerData
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;nn
-	;push cx
+	
 	mov cx , bombtype
 	cmp cx,1
 	je decrease_score1
@@ -283,12 +283,11 @@ pusha
 	 add score2,cx
 	 writescore2 score2
 	
-	;pop cx
+	
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;nn
-	;drawpic bomberx,bombery,bomerData
+	
 	JMP _finish
 	
-	; TODO to be completed
 	_label_P2: 
 	clearBlock x1 , y1
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;N
@@ -363,13 +362,6 @@ call find1Darray
 
 
 mov cl , DS:[BP][DI]
-;-----------------
-;printnum cl
-;	push ax
-;	MOV AH , 0
-;	INT 16h
-;	pop ax 
-;-----------------
 
 cmp cl , X
 je __finish
@@ -378,24 +370,6 @@ shl cl , 1
 shr cl , 1
 shr cl , 1
 shl cl , 1
-
-;-----------------
-;printnum cl
-;	push ax
-;	mov ah,2
-;	mov dl,','
-;	int 21h
-;	
-;	
-;	MOV AH , 0
-;	INT 16h
-;	
-;	mov ah,2
-;	mov dl,','
-;	int 21h
-;	pop ax 
-;	
-;-----------------
 
 
 updategrid x_1 , y_1 , cl 
@@ -539,8 +513,6 @@ explode:
 	
 	push bx
 	push ax
-	
-	;call find1Darray
 
 	;--------------------------------------------
 	
@@ -569,39 +541,7 @@ explode:
 	SUB AX , 32
 	checkBlock BX , AX,1
 	
-	;jmp ___label
-	
-	
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;nn	
-	;ClearBuffer
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;nn	
-	
-	
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;N
-;___label2:
-	
-	
-	; GetCurrentTime time
-	; mov al,time
-	; cmp al,last_time
-	; je wait_for_bomb2
-	; inc bomb2.counter
-	
-	
-	; wait_for_bomb2:
-	; mov last_time,al
-	
-	
-	; call checkkeypressed2
-	; ClearBuffer
-	
-	;cmp bomb2.counter , 3
-	;je explode2 
-	
 	jmp ___label
-	;jmp ___label2
 	
 explode2:
   
@@ -615,8 +555,6 @@ explode2:
 	push bx
 	push ax
 	
-	;call find1Darray
-
 	;--------------------------------------------
 	
 	
@@ -647,7 +585,6 @@ explode2:
 	
 	
 	jmp ___label
-	;jmp ___label2
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -855,7 +792,7 @@ space:
 			mov bomb1.counter , 0
 		
 			updategrid bomberX , bomberY , B1
-			;don't forget to ubdate the grid to ground
+			
 			
 			
 			
@@ -1029,12 +966,10 @@ tab:
 			mov bomb2.bombx , ax
 			mov ax, bomber2Y
 			mov bomb2.bomby , ax
-			;GetCurrentTime bomb1.to_be_drawn
 			mov bomb2.to_be_drawn , 1
 			mov bomb2.counter , 0
 		
 			updategrid bomber2X , bomber2Y , B1
-			;don't forget to ubdate the grid to ground
 			
 			
 			
@@ -1106,23 +1041,6 @@ loadimages proc
 		callOpenFile bomerFilename,bomerFilehandle
 		callLoadData bomerFilehandle,bomerData,imagewidth,imageheight
 		callCloseFile bomerFilehandle
-		
-		;;;;;;;;;;;;;;;;load bomb right;;;;;;;;;;;;;;;;;;;;;;;;
-		;callOpenFile bombrightFilename,bombrightFilehandle
-		;callLoadData bombrightFilehandle,bombrightData,imagewidth,imageheight
-		;callCloseFile bombrightFilehandle
-		;;;;;;;;;;;;;;;;load bomb left;;;;;;;;;;;;;;;;;;;;;;;;
-		;callOpenFile bombleftFilename,bombleftFilehandle
-		;callLoadData bombleftFilehandle,bombleftData,imagewidth,imageheight
-		;callCloseFile bombleftFilehandle
-		;;;;;;;;;;;;;;;load bomb up;;;;;;;;;;;;;;;;;;;;;;;;
-		;callOpenFile bombupFilename,bombupFilehandle
-		;callLoadData bombupFilehandle,bombupData,imagewidth,imageheight
-		;callCloseFile bombupFilehandle
-		;;;;;;;;;;;;;;;;load bomb down;;;;;;;;;;;;;;;;;;;;;;;;
-		;callOpenFile bombdownFilename,bombdownFilehandle
-		;callLoadData bombdownFilehandle,bombdownData,imagewidth,imageheight
-		;callCloseFile bombdownFilehandle
 		
 		;;;;;;;;;;;;;;;load coin ;;;;;;;;;;;;;;;;;;;;;;;;
 		callOpenFile coinFilename,coinFilehandle
