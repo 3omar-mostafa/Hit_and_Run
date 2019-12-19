@@ -219,7 +219,8 @@ endm drawpic
 
 
 checkTypeAndDraw MACRO x1 , y1 , type1,bombtype
-local _finish , _label_G , _label_P1 , _label_P2 , _label_F , _label_C , _label_H,increase_score1,increase_score2,decrease_score1,decrease_score2,bombtype
+local _finish , _label_G , _label_P1 , _label_P2 , _label_F , _label_C , _label_H , _label_skip_heart1 , _label_skip_heart2 , __label_skip_heart1 , __label_skip_heart2
+local increase_score1,increase_score2,decrease_score1,decrease_score2,bombtype,_label_print_heart1,_label_print_heart2 , __label_print_heart1,__label_print_heart2
 
 pusha
 
@@ -263,7 +264,15 @@ pusha
 	je increase_score1
 	decrease_score1:
 	dec heart1
+	CMP originalPlaceXP1 , 288
+	JE _label_print_heart2
+	writeheart2 heart1
+	JMP _label_skip_heart2
+	
+	_label_print_heart2:
 	writeheart1 heart1
+	
+	_label_skip_heart2:
 	cmp heart1,0
 	je exit
 	cmp score1 , 0
@@ -274,8 +283,16 @@ pusha
 	 
 	 jmp _finish
 	 increase_score1:
-	    dec heart1
-	 writeheart1 heart1
+	dec heart1
+	CMP originalPlaceXP1 , 288
+	JE __label_print_heart2
+	writeheart2 heart1
+	JMP __label_skip_heart2
+	
+	__label_print_heart2:
+	writeheart1 heart1
+	
+	__label_skip_heart2:
 	 cmp heart1,0
 	je exit
 	 mov cx , 200
@@ -309,9 +326,17 @@ pusha
 	je increase_score2
 	decrease_score2:
 	 
-	  dec heart2
-	  writeheart2 heart2
-	  cmp heart2,0
+	dec heart2
+	CMP originalPlaceXP2 , 16
+	JE _label_print_heart1
+	writeheart1 heart2
+	JMP _label_skip_heart1
+	
+	_label_print_heart1:
+	writeheart2 heart2
+	
+	_label_skip_heart1:
+	cmp heart2,0
 	 
 	 je exit
 	cmp score2 ,0
@@ -324,7 +349,15 @@ pusha
 	 jmp _finish
 	 increase_score2:
 	    dec heart2
-	 writeheart2 heart2
+	 	CMP originalPlaceXP2 , 16
+	JE __label_print_heart1
+	writeheart1 heart2
+	JMP __label_skip_heart1
+	
+	__label_print_heart1:
+	writeheart2 heart2
+	
+	__label_skip_heart1:
 	 cmp heart2,0
 	 
 	je exit
