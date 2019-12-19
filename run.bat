@@ -7,6 +7,7 @@ if not exist link.exe echo Microsoft (R) Segmented Executable Linker is Not Foun
 if not exist link.exe echo Please download it and make sure it is link.exe
 
 if exist graphics.obj erase graphics.obj
+if exist chat.obj erase chat.obj
 if exist inout.obj erase inout.obj
 if exist main.obj erase main.obj
 if exist welcome.obj erase welcome.obj
@@ -18,6 +19,10 @@ if exist game.exe erase game.exe
 masm main.asm /z /Zi /Zd /v    > main.log ,%main ;
 If not exist main.obj echo Assembling Failed , Check main.log for errors
 If not exist main.obj goto end
+
+masm chat.asm /z /Zi /Zd /v    > chat.log ,%chat ;
+If not exist chat.obj echo Assembling Failed , Check chat.log for errors
+If not exist chat.obj goto end
 
 masm results.asm /z /Zi /Zd /v    > results.log ,%results ;
 If not exist results.obj echo Assembling Failed , Check results.log for errors
@@ -43,7 +48,7 @@ masm inout.asm /z /Zi /Zd /v    > inout.log ,%inout ;
 If not exist inout.obj echo Assembling Failed , Check inout.log for errors
 If not exist inout.obj goto end
 
-link main.obj welcome.obj inout.obj draw.obj graphics.obj menu.obj results.obj > link.log ,game.exe,nul;
+link main.obj welcome.obj inout.obj draw.obj graphics.obj menu.obj results.obj chat.obj > link.log ,game.exe,nul;
 If not exist game.exe echo Linking Failed , Check link.log for errors
 If not exist game.exe goto end
 

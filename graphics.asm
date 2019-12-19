@@ -7,6 +7,11 @@ public music
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;N
 EXTRN INDATAP1:BYTE
 EXTRN INDATAP2:BYTE
+EXTRN initializeUART:NEAR
+EXTRN prepareSend:NEAR
+EXTRN sendChar:NEAR
+EXTRN checkReceived:NEAR
+EXTRN receiveChar:NEAR
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;N
 .DATA
 include inout.inc
@@ -502,11 +507,7 @@ send1:
 
 send:
 
-mov cx , 1000
-_label_delay:
-	
-	Loop _label_delay
-	
+
     CALL prepareSend
     CALL sendChar
 
@@ -1426,89 +1427,5 @@ pop ax
 ret
 BOOMmusic endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;NN
-
-initializeUART PROC
-PUSHA
-
-    ; Set Divisor Latch Access Bit
-    MOV DX,3fbh ; Line Control Register
-    MOV AL,10000000b ;Set Divisor Latch Access Bit
-    OUT DX,AL ;Out it
-
-    ;Set LSB byte of the Baud Rate Divisor Latch register.
-    MOV DX,3f8h
-    MOV AL,0ch
-    OUT DX,AL
-
-    ;Set MSB byte of the Baud Rate Divisor Latch register.
-    MOV DX,3f9h
-    MOV AL,00h
-    OUT DX,AL
-
-    ; Baud rate is 9600
-
-    ;Set port configuration
-    MOV DX,3fbh
-    MOV AL,00011011b
-    ;0:Access to Receiver buffer, Transmitter buffer
-    ;0:Set Break disabled
-    ;011:Even Parity
-    ;0:One Stop Bit
-    ;11:8bits
-    OUT DX,AL
-
-POPA
-RET
-initializeUART ENDP
-
-;@return result in AL
-prepareSend PROC
-
-    ;Check that Transmitter Holding Register is Empty
-    MOV DX , 3FDH ; Line Status Register
-    _label_prepareSend_check:
-    IN AL , DX
-    TEST AL , 00100000b
-    JZ _label_prepareSend_check
-
-RET
-prepareSend ENDP
-
-sendChar PROC
-PUSHA
-
-    ;If empty put the KeyValue IN Transmit data register
-    MOV DX , 3F8H ; Transmit data register
-    MOV AL,KeyValue
-    OUT DX , AL
-
-POPA
-RET
-sendChar ENDP
-
-;@return result in AL
-checkReceived PROC
-
-    ;Check that Data is Ready
-    MOV DX , 3FDH ; Line Status Register
-    IN AL , DX
-    AND AL , 1
-
-RET
-checkReceived ENDP
-
-
-receiveChar PROC
-PUSHA
-
-    ;If Ready read the KeyValue IN Receive data register
-    MOV DX , 03F8H
-    IN AL , DX
-    MOV KeyValue , AL
-
-POPA
-RET
-receiveChar ENDP
-
 
 END

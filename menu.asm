@@ -25,6 +25,7 @@ menuData DB ?
 pressedKeyScanCode DB ?
 
 EXTRN Graphics:NEAR
+EXTRN Chat:NEAR
 INCLUDE inout.inc
 
 .CODE
@@ -109,9 +110,8 @@ getKey:
 	
 	; TODO: to be continued
 	start_chatting:
-
-	
-	JMP exit
+	CALL Chat
+	JMP start
 	
 	start_game:
 	CALL Graphics
