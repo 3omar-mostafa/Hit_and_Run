@@ -34,6 +34,7 @@ setCursorPosition PROC
 	; DL -> x
 	; DH -> y
 	
+	MOV BH , 0
 	MOV AH , 2
 	INT 10h
 

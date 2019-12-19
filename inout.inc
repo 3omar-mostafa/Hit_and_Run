@@ -163,12 +163,14 @@ endm GetCurrentTime
 callSetCursorPosition MACRO x , y
 	PUSH DX
 	PUSH AX
-
+	PUSH BX
+	
 	MOV DL , x
 	MOV DH , y
 	
 	CALL setCursorPosition
 	
+	POP BX
 	POP AX
 	POP DX
 ENDM callSetCursorPosition

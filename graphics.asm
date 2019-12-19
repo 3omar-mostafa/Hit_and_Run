@@ -20,7 +20,7 @@ stackIP dw ?
 	gridWidth EQU 320
 	gridHeight EQU 144
 	
-	gametimer db 100
+	gametimer db 255
 	
 	F4Scancode  EQU  3Eh
 	
@@ -40,6 +40,11 @@ stackIP dw ?
 	bomberx DW 288
 	bomberY DW 128
 	
+	originalPlaceXP1 DW 288
+	originalPlaceYP1 DW 128
+	originalPlaceXP2 DW 16
+	originalPlaceYP2 DW 32
+	
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;N
     bomber2x DW 16
 	bomber2Y DW 32
@@ -47,8 +52,8 @@ stackIP dw ?
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;nn
 	score1 dw 0000
 	score2 dw 0000
-	heart1 dw 3
-	heart2 dw 3
+	heart1 dw 10
+	heart2 dw 10
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;nn
 	bombFilename DB 'bomb.img', 0
 	bombFilehandle DW ?
@@ -63,7 +68,10 @@ stackIP dw ?
 	heartFilehandle DW ?
 	heartData DB imagewidth*imageheight dup(2)
 
-
+	KeyValue DB ?
+	ExitRecieving EQU 5
+	ExitSending EQU 7
+	
 ; set bit in Most signeficant bit refers to block (forbidden movement)
 	X EQU  10000000b ; 128
 	B EQU  10000001b ; 129
@@ -114,9 +122,9 @@ Graphics PROC
 	mov bomber2Y , 32
 	mov score1 , 0000
 	mov score2 , 0000
-	mov heart1 , 3
-	mov heart2 , 3
-	mov gametimer , 100
+	mov heart1 , 10
+	mov heart2 , 10
+	mov gametimer , 255
 	
 	
 	call initializeGrid
@@ -232,8 +240,18 @@ pusha
 	_label_P1: 
 	clearBlock x1 , y1
 	
-	mov bomberx ,288
-	mov bombery , 128
+	push ax
+	mov ax ,originalPlaceXP1
+	mov bomberx ,ax
+	mov ax ,originalPlaceYP1
+	mov bombery , ax
+	pop ax
+	
+	callSetCursorPosition 1,1
+	printnum originalPlaceXP1
+	callSetCursorPosition 2,2
+	printnum originalPlaceYP1
+	
 	drawpic bomberx , bombery , bomerData
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;nn
 	
@@ -272,8 +290,13 @@ pusha
 	_label_P2: 
 	clearBlock x1 , y1
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;N
-	mov bomber2x ,16
-	mov bomber2y ,32
+	push ax
+	mov ax ,originalPlaceXP2
+	mov bomber2x ,ax
+	mov ax ,originalPlaceYP2
+	mov bomber2y , ax
+	pop ax
+	
 	drawpic bomber2x , bomber2y , bomerData
 
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;N
@@ -401,6 +424,63 @@ JNE drawLoop
 
 ;;;;;;;;;;;;;;;;;;;;;;;draw pomerman;;;;;;;;;;;;;;;;;;;;;;;;
 
+	CALL initializeUART
+
+
+initilizationLoop:
+	
+    CALL checkReceived
+    CMP AL , 0
+    JE send1
+
+    CALL receiveChar
+    CMP KeyValue , ExitRecieving
+	JE swap
+	
+	CMP KeyValue , ExitSending
+	JE end_initializeLoop
+
+
+swap:
+	MOV AX , bomberx
+	MOV BX , bomber2X
+	
+	MOV bomber2X , AX
+	MOV bomberx , BX
+	
+	MOV AX , bombery
+	MOV BX , bomber2y
+	
+	MOV bomber2y , AX
+	MOV bombery , BX
+	
+
+	MOV originalPlaceXP1 , 16
+	MOV originalPlaceXP2 , 288
+	
+	MOV originalPlaceYP1 , 32
+	MOV originalPlaceYP2 , 128
+	
+	MOV KeyValue , ExitSending
+	JMP send
+	
+send1:
+	MOV KeyValue , ExitRecieving
+
+send:
+
+mov cx , 1000
+_label_delay:
+	
+	Loop _label_delay
+	
+    CALL prepareSend
+    CALL sendChar
+
+CMP KeyValue , ExitSending
+JNE initilizationLoop
+
+end_initializeLoop:
 
 	drawpic bomberx,bomberY,bomerData
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;N
@@ -409,6 +489,9 @@ JNE drawLoop
 	drawpic 96 , 0 , heartData
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;N
 	drawpic 288 , 0 , heartData
+	
+
+	
 	
     writescore1 score1
 	writescore2 score2
@@ -608,7 +691,11 @@ checkkeypressed PROC
 			jz tempexit1
             jmp tempfinish1
                 
-isup:
+isup:			
+
+			Mov KeyValue,17                         ;send W
+			CALL prepareSend
+			CALL sendChar
 			mov ax , bomberY
 			mov y_old , ax
 			
@@ -645,6 +732,10 @@ temp3:
 temp2: 		jmp temp
 tempright:  jmp isright
 isdown:
+
+			Mov KeyValue,31                         ;send s
+			CALL prepareSend
+			CALL sendChar
 			mov ax , bomberY
 			mov y_old , ax
 			
@@ -679,6 +770,10 @@ temp4:
 tempfinish1:jmp tempfinish2
 temp: 		jmp isleft
 isright:
+
+			Mov KeyValue,32                         ;send D
+			CALL prepareSend
+			CALL sendChar
 			mov ax , bomberX
 			mov y_old , ax
 			
@@ -712,6 +807,10 @@ temp5:
 			jmp finish
 tempfinish2:jmp finish
 isleft: 
+
+			Mov KeyValue,30                         ;send A
+			CALL prepareSend
+			CALL sendChar
 			mov ax , bomberX
 			mov y_old , ax
 			
@@ -745,6 +844,9 @@ nodraw4:
 			jmp finish
 space:			
 			
+			Mov KeyValue,15                         ;send tap
+			CALL prepareSend
+			CALL sendChar
 			cmp bomb1.counter,2
 			jb finish
 			
@@ -767,10 +869,12 @@ checkkeypressed ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;N
 checkkeypressed2 PROC 
-            mov ah , 1
-            int 16h
-			
-			
+            CALL checkReceived
+			CMP AL , 0
+			JE temp2_23_2
+
+			CALL receiveChar
+			mov ah,KeyValue
 			
             cmp ah , 17
             jz isup2
@@ -1290,6 +1394,88 @@ ret
 BOOMmusic endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;NN
 
+initializeUART PROC
+PUSHA
+
+    ; Set Divisor Latch Access Bit
+    MOV DX,3fbh ; Line Control Register
+    MOV AL,10000000b ;Set Divisor Latch Access Bit
+    OUT DX,AL ;Out it
+
+    ;Set LSB byte of the Baud Rate Divisor Latch register.
+    MOV DX,3f8h
+    MOV AL,0ch
+    OUT DX,AL
+
+    ;Set MSB byte of the Baud Rate Divisor Latch register.
+    MOV DX,3f9h
+    MOV AL,00h
+    OUT DX,AL
+
+    ; Baud rate is 9600
+
+    ;Set port configuration
+    MOV DX,3fbh
+    MOV AL,00011011b
+    ;0:Access to Receiver buffer, Transmitter buffer
+    ;0:Set Break disabled
+    ;011:Even Parity
+    ;0:One Stop Bit
+    ;11:8bits
+    OUT DX,AL
+
+POPA
+RET
+initializeUART ENDP
+
+;@return result in AL
+prepareSend PROC
+
+    ;Check that Transmitter Holding Register is Empty
+    MOV DX , 3FDH ; Line Status Register
+    _label_prepareSend_check:
+    IN AL , DX
+    TEST AL , 00100000b
+    JZ _label_prepareSend_check
+
+RET
+prepareSend ENDP
+
+sendChar PROC
+PUSHA
+
+    ;If empty put the KeyValue IN Transmit data register
+    MOV DX , 3F8H ; Transmit data register
+    MOV AL,KeyValue
+    OUT DX , AL
+
+POPA
+RET
+sendChar ENDP
+
+;@return result in AL
+checkReceived PROC
+
+    ;Check that Data is Ready
+    MOV DX , 3FDH ; Line Status Register
+    IN AL , DX
+    AND AL , 1
+
+RET
+checkReceived ENDP
+
+
+receiveChar PROC
+PUSHA
+
+    ;If Ready read the KeyValue IN Receive data register
+    MOV DX , 03F8H
+    IN AL , DX
+    MOV KeyValue , AL
+
+POPA
+RET
+receiveChar ENDP
 
 
 END
