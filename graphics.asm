@@ -867,7 +867,10 @@ isleft:
 			drawpic bomberx,bomberY,bomerData
 			updategrid bomberx , bomberY , p1
 			jmp finish
-tempexit1: 	jmp exit					
+tempexit1:
+			MOV KeyValue , F4Scancode
+			CALL sendChar
+			jmp exit					
 nodraw4:
 			
 			
