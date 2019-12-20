@@ -28,6 +28,7 @@ cursorY_Down DB 13
 ; The screen is splited into two haves : WindowUp , WindowDown
 
 PUBLIC Chat
+PUBLIC KeyValue
 PUBLIC initializeUART
 PUBLIC prepareSend
 PUBLIC sendChar

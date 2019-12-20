@@ -7,6 +7,7 @@ public music
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;N
 EXTRN INDATAP1:BYTE
 EXTRN INDATAP2:BYTE
+EXTRN KeyValue:BYTE
 EXTRN initializeUART:NEAR
 EXTRN prepareSend:NEAR
 EXTRN sendChar:NEAR
@@ -73,7 +74,6 @@ stackIP dw ?
 	heartFilehandle DW ?
 	heartData DB imagewidth*imageheight dup(2)
 
-	KeyValue DB ?
 	ExitRecieving EQU 5
 	ExitSending EQU 7
 	
@@ -130,6 +130,12 @@ Graphics PROC
 	mov heart1 , 10
 	mov heart2 , 10
 	mov gametimer , 255
+
+	MOV originalPlaceXP1 , 288
+	MOV originalPlaceYP1 , 128
+	
+	MOV originalPlaceXP2 , 16
+	MOV originalPlaceYP2 , 32
 	
 	
 	call initializeGrid
@@ -190,7 +196,8 @@ endm updategrid
 
 
 ClearBuffer MACRO
-    LOCAL clear , endClear
+LOCAL clear , endClear
+PUSH AX
     clear:
       MOV AH ,1
       INT 16h
@@ -200,6 +207,7 @@ ClearBuffer MACRO
       CMP AX , 0          
       JMP clear
     endCLear:
+POP AX
 ENDM ClearBuffer
 
 
