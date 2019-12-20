@@ -1,31 +1,34 @@
-.Model Small
+.Model SMALL
 .386
-.Stack 1024
+.Stack 2048
 .DATA
 ESC_ASCII EQU 27
 Enter_ASCII EQU 13
 backSpace_ASCII EQU 8
 
-windowWidth EQU 79
-windowHeight EQU 12
+windowOneStartX DB 0
+windowOneEndX DB 39
 
-windowUpStartY EQU 0
-windowUpEndY EQU 12
+windowOneStartY DB 0
+windowOneEndY DB 24
 
-windowDownStartY EQU 13
-windowDownEndY EQU 24
+WindowOneColor DB 4FH
+
+windowTwoStartX DB 40
+windowTwoEndX DB 79
+
+windowTwoStartY DB 0
+windowTwoEndY DB 24
+
+WindowTwoColor DB 1FH
 
 KeyValue DB ?
 
-cursorX_Up DB 0
-cursorY_Up DB 0
+cursorOne_X DB 0
+cursorOne_Y DB 0
 
-cursorX_Down DB 0
-cursorY_Down DB 13
-
-
-.CODE
-; The screen is splited into two haves : WindowUp , WindowDown
+cursorTwo_X DB 40
+cursorTwo_Y DB 0
 
 PUBLIC Chat
 PUBLIC KeyValue
@@ -35,17 +38,30 @@ PUBLIC sendChar
 PUBLIC checkReceived
 PUBLIC receiveChar
 
+; These are variables are initailized by the caller
+PUBLIC windowOneStartX
+PUBLIC windowOneEndX
+PUBLIC windowOneStartY
+PUBLIC windowOneEndY
+PUBLIC WindowOneColor
+PUBLIC windowTwoStartX
+PUBLIC windowTwoEndX
+PUBLIC windowTwoStartY
+PUBLIC windowTwoEndY
+PUBLIC WindowTwoColor
 
+.CODE
+; The screen is splited into two haves : WindowOne , WindowTwo
 
-Chat PROC
+Chat PROC far
 
 MOV AX , @DATA
 MOV DS , AX
 
-CALL switchToTextMode ; To clear the screen
+CALL initializeCursors
 CALL initializeUART
 CALL initializeWindow
-CALL setCursorUp
+CALL setCursorOne
 
 mainLoop:
     MOV AL , 0
@@ -58,24 +74,24 @@ mainLoop:
     CALL sendChar
 
     CMP KeyValue , backSpace_ASCII
-    JE _label_backspace_up
+    JE _label_backspace_one
 
     CMP KeyValue , Enter_ASCII
-    JE _label_enter_up
+    JE _label_enter_one
 
-    JMP _label_normalChar_up
+    JMP _label_normalChar_one
 
-    _label_backspace_up:
-        CALL printBackspaceUp
+    _label_backspace_one:
+        CALL printBackspaceOne
     JMP receive
 
-    _label_enter_up:
-        CALL printEnterUp
+    _label_enter_one:
+        CALL printEnterOne
     JMP receive
 
-    _label_normalChar_up:
-    CALL incrementCursorUp  ;printing (printChar) increments the cursor by itself
-    CALL printChar          ;But increment it by ourselves (incrementCursorUp) to handle the cusor in the two windows
+    _label_normalChar_one:
+    CALL incrementCursorOne  ;printing (printChar) increments the cursor by itself
+    CALL printChar           ;But increment it by ourselves (incrementCursorOne) to handle the cusor in the two windows
 
     receive:
     CALL checkReceived
@@ -84,32 +100,29 @@ mainLoop:
 
     CALL receiveChar
     CMP KeyValue , backSpace_ASCII
-    JE _label_backspace_down
+    JE _label_backspace_two
 
     CMP KeyValue , Enter_ASCII
-    JE _label_enter_down
+    JE _label_enter_two
 
-    JMP _label_normalChar_down
+    JMP _label_normalChar_two
 
-    _label_backspace_down:
-        CALL printBackspaceDown
+    _label_backspace_two:
+        CALL printBackspaceTwo
     JMP receive
 
-    _label_enter_down:
-        CALL printEnterDown
+    _label_enter_two:
+        CALL printEnterTwo
     JMP receive
 
-    _label_normalChar_down:
-    CALL incrementCursorDown ;printing (printRecievedChar) increments the cursor by itself
-    CALL printRecievedChar   ;But increment it by ourselves (incrementCursorDown) to handle the cusor in the two windows
+    _label_normalChar_two:
+    CALL incrementCursorTwo ;printing (printChar) increments the cursor by itself
+    CALL printChar          ;But increment it by ourselves (incrementCursorTwo) to handle the cusor in the two windows
 
 endLoop:
 CMP KeyValue , ESC_ASCII
 JNE mainLoop
 
-CALL switchToTextMode ; To clear the screen
-
-RET
 Chat ENDP
 
 
@@ -147,83 +160,107 @@ POPA
 RET
 initializeUART ENDP
 
+initializeCursors PROC
+PUSH AX
 
-scrollWindowUp PROC
-PUSHA
+MOV AL , windowOneStartX
+MOV cursorOne_X , AL
 
-    MOV AH,6 ; function 6
-    MOV AL,1 ; scroll by 1 line
-    MOV BH , 01FH ; White Text on Blue Background , 1 is blue , F is white
-    MOV CH,0 ; upper left Y
-    MOV CL,0 ; upper left X
-    MOV DH,windowUpEndY ; lower right Y
-    MOV DL,windowWidth ; lower right X
-    INT 10h
+MOV AL , windowOneStartY
+MOV cursorOne_Y , AL
 
-    DEC cursorY_Up ; Scroll increments y so we decrement it to remain at the same line
-    MOV cursorX_Up , 0
-    CALL setCursorUp
+MOV AL , windowTwoStartX
+MOV cursorTwo_X , AL
 
-POPA
+MOV AL , windowTwoStartY
+MOV cursorTwo_Y , AL
+
+POP AX
 RET
-scrollWindowUp ENDP
+initializeCursors ENDP
 
-
-scrollWindowDown PROC
-PUSHA
-
-    MOV AH,6 ; function 6
-    MOV AL,1 ; scroll by 1 line
-    MOV BH , 04FH ; White Text on Red Background , 4 is red , F is white
-    MOV CH,13 ; upper left Y
-    MOV CL,0 ; upper left X
-    MOV DH,windowDownEndY ; lower right Y
-    MOV DL,windowWidth ; lower right X
-    INT 10h
-
-    DEC cursorY_Down ; Scroll increments y so we decrement it to remain at the same line
-    MOV cursorX_Down , 0
-    CALL setCursorDown
-
-POPA
-RET
-scrollWindowDown ENDP
-
-switchToTextMode PROC
-PUSHA
-
-    MOV AH,0          
-    MOV AL,03h
-    INT 10h
-
-POPA
-RET
-switchToTextMode ENDP
 
 initializeWindow PROC
 PUSHA
 
-    CALL setCursorUp
+    ; scrolls the window size up and down to color them
 
-    MOV AH,9 ;Display
-    MOV BH,0 ;Page 0
-    MOV AL,' '
-    MOV CX,1040 ;1040 = 13*80
-    MOV BL,01Fh ;White Text on Blue background , 1 is blue , F is white
+    MOV AH,6 ; scroll down
+    MOV AL,windowOneEndY ; scroll by height of the window line
+    SUB AL,windowOneStartY
+    ADD AL,1
+    MOV BH,WindowOneColor
+    MOV CH,windowOneStartY ; oneper one Y
+    MOV CL,windowOneStartX ; oneper one X
+    MOV DH,windowOneEndY ; lower two Y
+    MOV DL,windowOneEndX ; lower two X
     INT 10h
 
-    CALL setCursorDown
-
-    MOV AH,9 ;Display
-    MOV BH,0 ;Page 0
-    MOV AL,' '
-    MOV CX,960 ;960 = 12*80
-    MOV BL,04Fh ;White text on Red background , 4 is red , F is white
+    MOV AH,7 ; scroll up
     INT 10h
+
+
+
+    MOV AH,6 ; scroll down
+    MOV AL,windowTwoEndY ; scroll by the height of the window
+    SUB AL,windowTwoStartY
+    ADD AL,1
+    MOV BH,WindowTwoColor
+    MOV CH,windowTwoStartY ; oneper one Y
+    MOV CL,windowTwoStartX ; oneper one X
+    MOV DH,windowTwoEndY ; lower two Y
+    MOV DL,windowTwoEndX ; lower two X
+    INT 10h
+
+    MOV AH,7 ; scroll up
+    INT 10h
+
 POPA
 RET
 initializeWindow ENDP
 
+scrollWindowOne PROC
+PUSHA
+
+    MOV AH,6 ; scroll down
+    MOV AL,1 ; scroll by 1 line
+    MOV BH,WindowOneColor
+    MOV CH,windowOneStartY ; oneper one Y
+    MOV CL,windowOneStartX ; oneper one X
+    MOV DH,windowOneEndY ; lower two Y
+    MOV DL,windowOneEndX ; lower two X
+    INT 10h
+
+    DEC cursorOne_Y ; Scroll increments y so we decrement it to remain at the same line
+    MOV AL , windowOneStartX
+    MOV cursorOne_X , AL
+    CALL setCursorOne
+
+POPA
+RET
+scrollWindowOne ENDP
+
+
+scrollWindowTwo PROC
+PUSHA
+
+    MOV AH,6 ; scroll down
+    MOV AL,1 ; scroll by 1 line
+    MOV BH,WindowTwoColor
+    MOV CH,windowTwoStartY ; oneper one Y
+    MOV CL,windowTwoStartX ; oneper one X
+    MOV DH,windowTwoEndY ; lower two Y
+    MOV DL,windowTwoEndX ; lower two X
+    INT 10h
+
+    DEC cursorTwo_Y ; Scroll increments y so we decrement it to remain at the same line
+    MOV AL , windowTwoStartX
+    MOV cursorTwo_X , AL
+    CALL setCursorTwo
+
+POPA
+RET
+scrollWindowTwo ENDP
 
 ; return AH -> scancode , AL -> ASCII code
 getPressedKey PROC
@@ -247,69 +284,73 @@ RET
 checkPressedKey ENDP
 
 
-printEnterUp PROC
+printEnterOne PROC
 PUSHA
 
-    INC cursorY_Up
-    MOV cursorX_Up , 0
-    CALL setCursorUp
+    INC cursorOne_Y
+    MOV AL , windowOneStartX
+    MOV cursorOne_X , AL
+    CALL setCursorOne
 
-    CMP cursorY_Up , windowUpEndY
-    JNE _label_printEnterUp_skipScrolling
-        ; scrolling one line up and set the new cursor
-        CALL scrollWindowUp
+    MOV AL , cursorOne_Y
+    CMP AL , windowOneEndY
+    JNE _label_printEnterOne_skipScrolling
+        ; scrolling one line one and set the new cursor
+        CALL scrollWindowOne
 
-_label_printEnterUp_skipScrolling:
+_label_printEnterOne_skipScrolling:
 POPA
 RET
-printEnterUp ENDP
+printEnterOne ENDP
 
 
 
-printEnterDown PROC
+printEnterTwo PROC
 PUSHA
 
-    INC cursorY_Down
-    MOV cursorX_Down , 0
-    CALL setCursorDown
+    INC cursorTwo_Y
+    MOV AL , windowTwoStartX
+    MOV cursorTwo_X , AL
+    CALL setCursorTwo
 
-    CMP cursorY_Down , windowDownEndY
-    JNE _label_printEnterDown_skipScrolling
-        ; scrolling one line up and set the new cursor
-        CALL scrollWindowDown
+    MOV AL , cursorTwo_Y
+    CMP AL , windowTwoEndY
+    JNE _label_printEnterTwo_skipScrolling
+        ; scrolling one line one and set the new cursor
+        CALL scrollWindowTwo
 
-_label_printEnterDown_skipScrolling:
+_label_printEnterTwo_skipScrolling:
 POPA
 RET
-printEnterDown ENDP
+printEnterTwo ENDP
 
-; Deleting is supported till the beginning of the current line
-printBackspaceUp PROC
+; Deleting is soneported till the beginning of the current line
+printBackspaceOne PROC
 PUSHA
 
-    CALL decrementCursorUp
+    CALL decrementCursorOne
     MOV AH,2
     MOV DL,' ' ; printing empty space to delete whatever under it
     INT 21h
-    CALL setCursorUp ; setting the cursor again because printing move the cursor
+    CALL setCursorOne ; setting the cursor again because printing move the cursor
 
 POPA
 RET
-printBackspaceUp ENDP
+printBackspaceOne ENDP
 
-; Deleting is supported till the beginning of the current line
-printBackspaceDown PROC
+; Deleting is soneported till the beginning of the current line
+printBackspaceTwo PROC
 PUSHA
 
-    CALL decrementCursorDown
+    CALL decrementCursorTwo
     MOV AH,2
     MOV DL,' ' ; printing empty space to delete whatever under it
     INT 21h
-    CALL setCursorDown ; setting the cursor again because printing move the cursor
+    CALL setCursorTwo ; setting the cursor again because printing move the cursor
 
 POPA
 RET
-printBackspaceDown ENDP
+printBackspaceTwo ENDP
 
 printChar PROC
 PUSHA
@@ -386,121 +427,128 @@ receiveChar ENDP
 
 
 
-;Move the cursor to (cursorX_Down,cursorY_Down)
-setCursorDown PROC
+;Move the cursor to (cursorTwo_X,cursorTwo_Y)
+setCursorTwo PROC
 PUSHA
 
     MOV AH , 2
     MOV BH , 0 ; Page Number
-    MOV DL , cursorX_Down
-    MOV DH , cursorY_Down
+    MOV DL , cursorTwo_X
+    MOV DH , cursorTwo_Y
     INT 10h
 
 POPA
 RET
-setCursorDown ENDP
+setCursorTwo ENDP
 
 
-;Move the cursor to (cursorX_Up,cursorY_Up)
-setCursorUp PROC
+;Move the cursor to (cursorOne_X,cursorOne_Y)
+setCursorOne PROC
 PUSHA
 
     MOV AH , 2
     MOV BH , 0 ; Page Number
-    MOV DL , cursorX_Up
-    MOV DH , cursorY_Up
+    MOV DL , cursorOne_X
+    MOV DH , cursorOne_Y
     INT 10h
 
 POPA
 RET
-setCursorUp ENDP
+setCursorOne ENDP
 
 
 
-incrementCursorUp PROC
+incrementCursorOne PROC
 PUSHA
 
-CALL setCursorUp
+CALL setCursorOne
 
-CMP cursorY_Up , windowUpEndY
-JNE _label_incrementCursorUp_skipScrolling
-    ; scrolling one line up and set the new cursor
-    CALL scrollWindowUp
+MOV AL , cursorOne_Y
+CMP AL , windowOneEndY
+JNE _label_incrementCursorOne_skipScrolling
+    ; scrolling one line one and set the new cursor
+    CALL scrollWindowOne
 
-_label_incrementCursorUp_skipScrolling:
-    CMP cursorX_Up , windowWidth
-    JE _label_incrementCursorUp
+_label_incrementCursorOne_skipScrolling:
+    MOV AL , cursorOne_X
+    CMP AL , windowOneEndX
+    JE _label_incrementCursorOne
 
-    INC cursorX_Up
+    INC cursorOne_X
 POPA
 RET
 
-_label_incrementCursorUp:
-    MOV cursorX_Up , 0
-    INC cursorY_Up
+_label_incrementCursorOne:
+    MOV AL , windowOneStartX
+    MOV cursorOne_X , AL
+    INC cursorOne_Y
 
 POPA
 RET
-incrementCursorUp ENDP
+incrementCursorOne ENDP
 
 
-incrementCursorDown PROC
+incrementCursorTwo PROC
 PUSHA
 
-CALL setCursorDown
+CALL setCursorTwo
 
-CMP cursorY_Down , windowDownEndY
-JNE _label_incrementCursorDown_skipScrolling
-    ; scrolling one line up and set the new cursor
-    CALL scrollWindowDown
+MOV AL , cursorTwo_Y
+CMP AL , windowTwoEndY
+JNE _label_incrementCursorTwo_skipScrolling
+    ; scrolling one line one and set the new cursor
+    CALL scrollWindowTwo
 
-_label_incrementCursorDown_skipScrolling:
-    CMP cursorX_Down , windowWidth
-    JE _label_incrementCursorDown
+_label_incrementCursorTwo_skipScrolling:
+    MOV AL , cursorTwo_X 
+    CMP AL , windowTwoEndX
+    JE _label_incrementCursorTwo
 
-    INC cursorX_Down
+    INC cursorTwo_X
 POPA
 RET
 
-_label_incrementCursorDown:
-    MOV cursorX_Down , 0
-    INC cursorY_Down
+_label_incrementCursorTwo:
+    MOV AL , windowTwoStartX
+    MOV cursorTwo_X , AL
+    INC cursorTwo_Y
 
 POPA
 RET
-incrementCursorDown ENDP
+incrementCursorTwo ENDP
 
-; Decrements the upper window cursor till it reaches the beginning of the  line
-; It DOES NOT SUPPORT scrolling to upper line
-decrementCursorUp PROC
+; Decrements the oneper window cursor till it reaches the beginning of the  line
+; It DOES NOT SUPPORT scrolling to oneper line
+decrementCursorOne PROC
 PUSHA
+    MOV AL , cursorOne_X
+    CMP AL , windowOneStartX
+    JE _label_decrementCursorOne_doNotDecrement
 
-    CMP cursorX_Up , 0
-    JE _label_decrementCursorUp_doNotDecrement
+    DEC cursorOne_X
+    CALL setCursorOne
 
-    DEC cursorX_Up
-    CALL setCursorUp
-
-_label_decrementCursorUp_doNotDecrement:
+_label_decrementCursorOne_doNotDecrement:
 POPA
 RET
-decrementCursorUp ENDP
+decrementCursorOne ENDP
 
 
 ; Decrements the lower window cursor till it reaches the beginning of the  line
-; It DOES NOT SUPPORT scrolling to upper line
-decrementCursorDown PROC
+; It DOES NOT SUPPORT scrolling to oneper line
+decrementCursorTwo PROC
 PUSHA
 
-    CMP cursorX_Down , 0
-    JE _label_decrementCursorDown_doNotDecrement
+    MOV AL , cursorTwo_X
+    CMP AL , windowTwoStartX
+    JE _label_decrementCursorTwo_doNotDecrement
 
-    DEC cursorX_Down
-    CALL setCursorDown
+    DEC cursorTwo_X
+    CALL setCursorTwo
 
-_label_decrementCursorDown_doNotDecrement:
+_label_decrementCursorTwo_doNotDecrement:
 POPA
 RET
-decrementCursorDown ENDP
+decrementCursorTwo ENDP
 
 END
