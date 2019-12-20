@@ -292,7 +292,7 @@ PUSHA
 
     MOV AL , cursorOne_Y
     CMP AL , windowOneEndY
-    JNE _label_printEnterOne_skipScrolling
+    JB _label_printEnterOne_skipScrolling
         ; scrolling one line one and set the new cursor
         CALL scrollWindowOne
 
@@ -313,7 +313,7 @@ PUSHA
 
     MOV AL , cursorTwo_Y
     CMP AL , windowTwoEndY
-    JNE _label_printEnterTwo_skipScrolling
+    JB _label_printEnterTwo_skipScrolling
         ; scrolling one line one and set the new cursor
         CALL scrollWindowTwo
 
