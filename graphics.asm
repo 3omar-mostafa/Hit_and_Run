@@ -12,9 +12,23 @@ EXTRN initializeUART:NEAR
 EXTRN sendChar:NEAR
 EXTRN checkReceived:NEAR
 EXTRN receiveChar:NEAR
+
+EXTRN Chat:NEAR
+; Inline Chat Windows variables
+EXTRN windowOneStartX:BYTE
+EXTRN windowOneEndX:BYTE
+EXTRN windowOneStartY:BYTE
+EXTRN windowOneEndY:BYTE
+EXTRN WindowOneColor:BYTE
+EXTRN windowTwoStartX:BYTE
+EXTRN windowTwoEndX:BYTE
+EXTRN windowTwoStartY:BYTE
+EXTRN windowTwoEndY:BYTE
+EXTRN WindowTwoColor:BYTE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;N
 .DATA
 include inout.inc
+include draw.inc
 test1 dw ?
 test2 dw ?
 time db ?
@@ -711,9 +725,9 @@ drawpixel endp
 
 
 checkkeypressed PROC 
-            mov ah , 1
-            int 16h
-			
+            mov ah , 1 ;ZF set if no keystroke available
+            int 16h    ;ZF clear if keystroke available
+			JZ temp3
 			
 			
             cmp ah , 72
@@ -728,7 +742,13 @@ checkkeypressed PROC
 			jz space
 			cmp ah, F4Scancode
 			jz tempexit1
-            jmp tempfinish1
+			mov ah , 1
+            int 16h
+			JZ temp3
+			MOV KeyValue , 0
+			CALL sendChar
+			CALL inlineChat
+			jmp temp3
                 
 isup:			
 
@@ -925,6 +945,9 @@ checkkeypressed2 PROC
 			jz tab
 			cmp ah, F4Scancode
 			jz tempexit2
+			CMP AH , 0
+			JNE temp2_2finish21_2
+			CALL inlineChat
             jmp temp2_2finish21_2
                 
 isup2:
@@ -1430,5 +1453,28 @@ pop ax
 ret
 BOOMmusic endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;NN
+
+
+inlineChat PROC
+
+MOV windowOneStartX , 0
+MOV windowOneEndX , 18
+MOV windowOneStartY , 20
+MOV windowOneEndY , 24
+MOV WindowOneColor , 0
+
+MOV windowTwoStartX , 21
+MOV windowTwoEndX , 39
+MOV windowTwoStartY , 20
+MOV windowTwoEndY , 24
+MOV WindowTwoColor , 0
+
+callDrawColumnUp 02 , 12 , 154 , 160 , 200 
+
+CALL Chat
+
+RET
+inlineChat ENDP
+
 
 END
