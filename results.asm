@@ -18,16 +18,15 @@ lineWidthXS EQU 1
 
 ; These procedures are public
 ; i.e. can be called from another assembly file
+; shows the effect of drawing letters on the screen
 
-PUBLIC letterDrawingSpeed
+EXTRN letterDrawingSpeed:BYTE
 
 INCLUDE colors.inc
 INCLUDE alphabet.inc
 INCLUDE inout.inc
 
 .Data
-; shows the effect of drawing letters on the screen
-letterDrawingSpeed DB 60 ; MIN value is 1
 time db ?
 
 yourscore DB 'Score = ' , '$'
