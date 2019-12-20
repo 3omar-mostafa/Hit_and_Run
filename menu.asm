@@ -26,6 +26,18 @@ pressedKeyScanCode DB ?
 
 EXTRN Graphics:NEAR
 EXTRN Chat:NEAR
+; Chat Windows variables
+EXTRN windowOneStartX:BYTE
+EXTRN windowOneEndX:BYTE
+EXTRN windowOneStartY:BYTE
+EXTRN windowOneEndY:BYTE
+EXTRN WindowOneColor:BYTE
+EXTRN windowTwoStartX:BYTE
+EXTRN windowTwoEndX:BYTE
+EXTRN windowTwoStartY:BYTE
+EXTRN windowTwoEndY:BYTE
+EXTRN WindowTwoColor:BYTE
+
 INCLUDE inout.inc
 
 .CODE
@@ -110,6 +122,7 @@ getKey:
 	
 	; TODO: to be continued
 	start_chatting:
+	CALL prepareChat
 	CALL Chat
 	JMP start
 	
@@ -127,5 +140,23 @@ exit:
     INT 21H
 	
 MenuScreen ENDP
+
+prepareChat PROC
+
+callSwitchToTextMode
+
+MOV windowOneStartX , 0
+MOV windowOneEndX , 79
+MOV windowOneStartY , 0
+MOV windowOneEndY , 12
+MOV WindowOneColor , 1FH
+
+MOV windowTwoStartX , 0
+MOV windowTwoEndX , 79
+MOV windowTwoStartY , 13
+MOV windowTwoEndY , 24
+MOV WindowTwoColor , 4FH
+RET
+prepareChat ENDP
 
 END
