@@ -9,7 +9,6 @@ EXTRN INDATAP1:BYTE
 EXTRN INDATAP2:BYTE
 EXTRN KeyValue:BYTE
 EXTRN initializeUART:NEAR
-EXTRN prepareSend:NEAR
 EXTRN sendChar:NEAR
 EXTRN checkReceived:NEAR
 EXTRN receiveChar:NEAR
@@ -515,8 +514,6 @@ send1:
 
 send:
 
-
-    CALL prepareSend
     CALL sendChar
 
 CMP KeyValue , ExitSending
@@ -736,7 +733,6 @@ checkkeypressed PROC
 isup:			
 
 			Mov KeyValue,17                         ;send W
-			CALL prepareSend
 			CALL sendChar
 			mov ax , bomberY
 			mov y_old , ax
@@ -776,7 +772,6 @@ tempright:  jmp isright
 isdown:
 
 			Mov KeyValue,31                         ;send s
-			CALL prepareSend
 			CALL sendChar
 			mov ax , bomberY
 			mov y_old , ax
@@ -814,7 +809,6 @@ temp: 		jmp isleft
 isright:
 
 			Mov KeyValue,32                         ;send D
-			CALL prepareSend
 			CALL sendChar
 			mov ax , bomberX
 			mov y_old , ax
@@ -851,7 +845,6 @@ tempfinish2:jmp finish
 isleft: 
 
 			Mov KeyValue,30                         ;send A
-			CALL prepareSend
 			CALL sendChar
 			mov ax , bomberX
 			mov y_old , ax
@@ -887,7 +880,6 @@ nodraw4:
 space:			
 			
 			Mov KeyValue,15                         ;send tap
-			CALL prepareSend
 			CALL sendChar
 			cmp bomb1.counter,2
 			jb finish

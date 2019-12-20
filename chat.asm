@@ -33,7 +33,6 @@ cursorTwo_Y DB 0
 PUBLIC Chat
 PUBLIC KeyValue
 PUBLIC initializeUART
-PUBLIC prepareSend
 PUBLIC sendChar
 PUBLIC checkReceived
 PUBLIC receiveChar
@@ -69,7 +68,6 @@ mainLoop:
     CMP AL , 0
     JE receive
 
-    CALL prepareSend
     CALL getPressedKey
     CALL sendChar
 
@@ -363,21 +361,8 @@ POPA
 RET
 printChar ENDP
 
-
-printRecievedChar PROC
+sendChar PROC
 PUSHA
-
-    MOV AH,2
-    MOV DL,KeyValue
-    INT 21h
-
-POPA
-RET
-printRecievedChar ENDP
-
-
-;@return result in AL
-prepareSend PROC
 
     ;Check that Transmitter Holding Register is Empty
     MOV DX , 3FDH ; Line Status Register
@@ -385,12 +370,6 @@ prepareSend PROC
     IN AL , DX
     TEST AL , 00100000b
     JZ _label_prepareSend_check
-
-RET
-prepareSend ENDP
-
-sendChar PROC
-PUSHA
 
     ;If empty put the KeyValue IN Transmit data register
     MOV DX , 3F8H ; Transmit data register
