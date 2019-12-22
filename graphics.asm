@@ -41,6 +41,8 @@ stackIP dw ?
 	
 	gametimer db 255
 	
+	BP_Temp DW ?
+	
 	F4Scancode  EQU  3Eh
 	
 	positionInGridFile DW 0
@@ -73,6 +75,7 @@ stackIP dw ?
 	score2 dw 0000
 	heart1 dw 10
 	heart2 dw 10
+
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;nn
 	bombFilename DB 'bomb.img', 0
 	bombFilehandle DW ?
@@ -99,11 +102,21 @@ stackIP dw ?
 	P1 EQU 00011000b ; 24
 	P2 EQU 00101000b ; 40
 	
+	F  EQU 00001000b ; 8 -> powerup for bomb
+	C EQU  00000010b ; 2
+	H EQU  00000100b ; 4
+	
+	
+	
+	F_B EQU F or B
+	C_B EQU C or B
+	H_B EQU H or B
+	
 ;  	    0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19
 grid DB X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X
-	 DB X , G , G , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , X                                                                  
-	 DB X , G , X , B , X , G , X , B , X , G , G , X , B , X , G , X , B , X , G , X           
-	 DB X , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , X                                                                                       
+	 DB X , G , G , B , B , C_B , B , B , B , B , B , B , B , B , B , B , B , B , B , X                                                                  
+	 DB X , G , X , C_B , X , G , X , B , X , G , G , X , B , X , G , X , B , X , G , X           
+	 DB X , B , C_B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , X                                                                                       
 	 DB X , G , X , B , X , G , X , B , X , G , G , X , B , X , G , X , B , X , G , X                                                                                     
 	 DB X , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , X                                                               
 	 DB X , G , X , B , X , G , X , B , X , G , G , X , B , X , G , X , B , X , G , X                                                                                    
@@ -151,7 +164,7 @@ Graphics PROC
 	MOV originalPlaceYP2 , 32
 	
 	
-	call initializeGrid
+	;call initializeGrid
 	
 	
 	 bomb struc
@@ -225,21 +238,18 @@ ENDM ClearBuffer
 
 
 drawpic macro x,y,imageData
-
-LEA BX , imageData ; BL contains index at the current drawn pixel
+PUSHA
 	
-	push si
-	push di
-	push bp
 	mov si,x
 	mov bp,x
+	MOV BP_Temp , BP
 	mov di,y
     MOV CX,x ; x1
     MOV DX,y ; y1
+	LEA BP , imageData ; BP contains index at the current drawn pixel
     call drawpixel 
-    pop bp
-	pop di
-    pop si
+
+POPA
 endm drawpic 
 
 
@@ -259,13 +269,30 @@ pusha
 	CMP type1 , P2 
 	JE _label_P2
 	
+	CMP type1 , C  
+	JE _label_C 
+	
 	_label_G:  
 	clearBlock x1 , y1
 	JMP _finish
 	
 	
+	_label_F:  
+	;
+	JMP _finish
+
+	_label_C: 
+	drawpic x1 , y1 , coinData
+	JMP _finish
+	
+	_label_H:
+	;
+	JMP _finish
+	
+	
 	_label_P1: 
 	clearBlock x1 , y1
+	
 	
 	push ax
 	mov ax ,originalPlaceXP1
@@ -685,6 +712,9 @@ explode2:
 	checkBlock BX , AX,2
 	
 	
+	callSetCursorPosition 5 , 5
+	printnum score1
+	
 	jmp ___label
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -704,17 +734,18 @@ drawpixel proc
 	MOV AH,0ch
 	add si,16
 	add di,16
+	MOV BX , 0
 ; Drawing loop
 	drawLoop1:
 
-	MOV AL,[BX]
+	MOV AL,DS:[BP]
 	INT 10h 
 	INC CX
-	INC BX
+	INC BP
 	CMP CX,si 
 JNE drawLoop1 
 	
-	MOV CX , bp
+	MOV CX , BP_Temp
 	INC DX
 	CMP DX , di
 JNE drawLoop1
@@ -767,7 +798,11 @@ isup:
 			
 			sub bomberY , 16
 			
-			
+			shr dl , 1
+			CMP dl , C
+			JNE _label_increment_score1_up
+			ADD score1 , 100
+			_label_increment_score1_up:
 			
 			cmp bomb1.to_be_drawn,1
 			jne nodraw
@@ -806,6 +841,11 @@ isdown:
 			
 			add bomberY , 16
 			
+			shr dl , 1
+			CMP dl , C
+			JNE _label_increment_score1_down
+			ADD score1 , 100
+			_label_increment_score1_down:
 			
 			cmp bomb1.to_be_drawn,1
 			jne nodraw1
@@ -842,6 +882,11 @@ isright:
 			jc temp5
 			add bomberX , 16
 			
+			shr dl , 1
+			CMP dl , C
+			JNE _label_increment_score1_right
+			ADD score1 , 100
+			_label_increment_score1_right:
 			
 			cmp bomb1.to_be_drawn,1
 			jne nodraw3
@@ -878,6 +923,11 @@ isleft:
 			jc finish
 			sub bomberX , 16
 			
+			shr dl , 1
+			CMP dl , C
+			JNE _label_increment_score1_left
+			ADD score1 , 100
+			_label_increment_score1_left:
 			
 			cmp bomb1.to_be_drawn,1
 			jne nodraw4
