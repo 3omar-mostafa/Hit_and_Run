@@ -39,7 +39,7 @@ stackIP dw ?
 	gridWidth EQU 320
 	gridHeight EQU 144
 	
-	gametimer db 255
+	gametimer db 150
 	
 	BP_Temp DW ?
 	
@@ -73,8 +73,8 @@ stackIP dw ?
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;nn
 	score1 dw 0000
 	score2 dw 0000
-	heart1 dw 10
-	heart2 dw 10
+	heart1 dw 3
+	heart2 dw 3
 
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;nn
 	bombFilename DB 'bomb.img', 0
@@ -163,9 +163,9 @@ Graphics PROC
 	mov bomber2Y , 32
 	mov score1 , 0000
 	mov score2 , 0000
-	mov heart1 , 10
-	mov heart2 , 10
-	mov gametimer , 255
+	mov heart1 , 3
+	mov heart2 , 3
+	mov gametimer , 150
 
 	MOV originalPlaceXP1 , 288
 	MOV originalPlaceYP1 , 128
@@ -689,10 +689,16 @@ explode:
 	Push Ax
 	
 	ADD AX , 32
+	CMP AX , 160
+	JE _label_skip_boundary_down1
 	checkBlock BX , AX,1
+	_label_skip_boundary_down1:
+
 	SUB AX , 64
+	CMP AX , 0
+	JE _label_skip_boundary_up1
 	checkBlock BX , AX,1
-	
+	_label_skip_boundary_up1:
 	pop ax
 	
 Level1_boom_p1:	
@@ -742,7 +748,7 @@ explode2:
 	
 	PUSH BX
 	ADD BX , 32
-
+	CMP 
 	checkBlock BX , AX,2
 	SUB BX , 64
 	checkBlock BX , AX,2
@@ -751,10 +757,17 @@ explode2:
 	push ax 
 	
 	ADD AX , 32
+	CMP AX , 160
+	JE _label_skip_boundary_down2
 	checkBlock BX , AX,2
+	_label_skip_boundary_down2:
+
 	SUB AX , 64
+	CMP AX , 0
+	JE _label_skip_boundary_up2
 	checkBlock BX , AX,2
-	
+	_label_skip_boundary_up2:
+
 	pop ax
 
 level1_bomb_p2:	
