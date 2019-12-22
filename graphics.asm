@@ -89,6 +89,14 @@ stackIP dw ?
 	heartFilename DB 'heart.img', 0
 	heartFilehandle DW ?
 	heartData DB imagewidth*imageheight dup(2)
+	
+	PowerUpFilename DB 'PowerUp.img', 0
+	PowerUpFilehandle DW ?
+	PowerUpData DB imagewidth*imageheight dup(2)
+	
+	HPFilename DB 'HP.img', 0
+	HPFilehandle DW ?
+	HPData DB imagewidth*imageheight dup(2)
 
 	ExitRecieving EQU 5
 	ExitSending EQU 7
@@ -114,13 +122,13 @@ stackIP dw ?
 	
 ;  	    0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19
 grid DB X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X
-	 DB X , G , G , B , B , C_B , B , B , B , B , B , B , B , B , B , B , B , B , B , X                                                                  
+	 DB X , G , G , H_B , B , C_B , H_B , B , B , B , B , B , B , B , B , B , B , B , B , X                                                                  
 	 DB X , G , X , C_B , X , G , X , B , X , G , G , X , B , X , G , X , B , X , G , X           
 	 DB X , B , C_B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , X                                                                                       
 	 DB X , G , X , B , X , G , X , B , X , G , G , X , B , X , G , X , B , X , G , X                                                                                     
-	 DB X , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , C_B , X                                                               
-	 DB X , G , X , B , X , G , X , B , X , G , G , X , B , X , G , X , B , X , G , X                                                                                    
-	 DB X , B , B , B , B , B , B , B , B , B , B , B , B , B , C_B , C_B , C_B , G , G , X                                                                    
+	 DB X , B , B , B , B , B , B , B , B , B , B , B , B , B , B , F_B , F_B , F_B , C_B , X                                                               
+	 DB X , G , X , B , X , G , X , B , X , G , G , X , B , X , G , X , H_B , X , G , X                                                                                    
+	 DB X , B , B , B , B , B , B , B , B , B , B , B , B , H_B , C_B , C_B , C_B , G , G , X                                                                    
 	 DB X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X
 
 
@@ -263,6 +271,12 @@ pusha
 	CMP type1 , G  
 	JE _label_G 
 	
+	CMP type1 , F  
+	JE _label_F 
+	
+	CMP type1 , H  
+	JE _label_H 
+	
 	CMP type1 , P1
 	JE _label_P1
 	
@@ -278,7 +292,7 @@ pusha
 	
 	
 	_label_F:  
-	;
+	drawpic x1 , y1 , PowerUpData
 	JMP _finish
 
 	_label_C: 
@@ -286,7 +300,7 @@ pusha
 	JMP _finish
 	
 	_label_H:
-	;
+	drawpic x1 , y1 , HPData
 	JMP _finish
 	
 	
@@ -804,6 +818,12 @@ isup:
 			ADD score1 , 100
 			_label_increment_score1_up:
 			
+			CMP dl , H
+			JNE _label_increment_Heart1_up
+			ADD heart1 , 1
+			_label_increment_Heart1_up:
+			
+			
 			cmp bomb1.to_be_drawn,1
 			jne nodraw
 			drawpic bomb1.bombx , bomb1.bomby , bombData
@@ -847,6 +867,11 @@ isdown:
 			ADD score1 , 100
 			_label_increment_score1_down:
 			
+			CMP dl , H
+			JNE _label_increment_Heart1_down
+			ADD heart1 , 1
+			_label_increment_Heart1_down:
+			
 			cmp bomb1.to_be_drawn,1
 			jne nodraw1
 			drawpic bomb1.bombx , bomb1.bomby , bombData
@@ -888,6 +913,11 @@ isright:
 			ADD score1 , 100
 			_label_increment_score1_right:
 			
+			CMP dl , H
+			JNE _label_increment_Heart1_right
+			ADD heart1 , 1
+			_label_increment_Heart1_right:
+			
 			cmp bomb1.to_be_drawn,1
 			jne nodraw3
 			drawpic bomb1.bombx , bomb1.bomby , bombData
@@ -928,6 +958,11 @@ isleft:
 			JNE _label_increment_score1_left
 			ADD score1 , 100
 			_label_increment_score1_left:
+			
+			CMP dl , H
+			JNE _label_increment_Heart1_left
+			ADD heart1 , 1
+			_label_increment_Heart1_left:
 			
 			cmp bomb1.to_be_drawn,1
 			jne nodraw4
@@ -1020,6 +1055,11 @@ isup2:
 			ADD score2 , 100
 			_label_increment_score2_up:
 			
+			CMP dl , H
+			JNE _label_increment_Heart2_up
+			ADD heart2 , 1
+			_label_increment_Heart2_up:
+			
 			
 			cmp bomb2.to_be_drawn,1
 			jne nodraw2
@@ -1061,6 +1101,11 @@ isdown2:
 			ADD score2 , 100
 			_label_increment_score2_down:
 			
+			CMP dl , H
+			JNE _label_increment_Heart2_down
+			ADD heart2 , 1
+			_label_increment_Heart2_down:
+			
 			cmp bomb2.to_be_drawn,1
 			jne nodraw21_2
 			drawpic bomb2.bombx , bomb2.bomby , bombData
@@ -1099,6 +1144,11 @@ isright2:
 			ADD score2 , 100
 			_label_increment_score2_right:
 			
+			CMP dl , H
+			JNE _label_increment_Heart2_right
+			ADD heart2 , 1
+			_label_increment_Heart2_right:
+			
 			cmp bomb2.to_be_drawn,1
 			jne nodraw23_2
 			drawpic bomb2.bombx , bomb2.bomby , bombData
@@ -1136,6 +1186,11 @@ isleft2:
 			JNE _label_increment_score2_left
 			ADD score2 , 100
 			_label_increment_score2_left:
+			
+			CMP dl , H
+			JNE _label_increment_Heart2_left
+			ADD heart2 , 1
+			_label_increment_Heart2_left:
 			
 			cmp bomb2.to_be_drawn,1
 			jne nodraw24_2
@@ -1249,6 +1304,16 @@ loadimages proc
 		callOpenFile heartFilename,heartFilehandle
 		callLoadData heartFilehandle,heartData,imagewidth,imageheight
 		callCloseFile heartFilehandle
+		
+		;;;;;;;;;;;;;;;load coin ;;;;;;;;;;;;;;;;;;;;;;;;
+		callOpenFile HPFilename,HPFilehandle
+		callLoadData HPFilehandle,HPData,imagewidth,imageheight
+		callCloseFile HPFilehandle
+		
+		;;;;;;;;;;;;;;;;load heart ;;;;;;;;;;;;;;;;;;;;;;;;
+		callOpenFile PowerUpFilename,PowerUpFilehandle
+		callLoadData PowerUpFilehandle,PowerUpData,imagewidth,imageheight
+		callCloseFile PowerUpFilehandle
 		
 		ret
 
