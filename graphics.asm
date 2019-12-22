@@ -39,7 +39,7 @@ stackIP dw ?
 	gridWidth EQU 320
 	gridHeight EQU 144
 	
-	gametimer db 255
+	gametimer db 150
 	
 	BP_Temp DW ?
 	
@@ -73,8 +73,8 @@ stackIP dw ?
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;nn
 	score1 dw 0000
 	score2 dw 0000
-	heart1 dw 10
-	heart2 dw 10
+	heart1 dw 3
+	heart2 dw 3
 
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;nn
 	bombFilename DB 'bomb.img', 0
@@ -163,9 +163,9 @@ Graphics PROC
 	mov bomber2Y , 32
 	mov score1 , 0000
 	mov score2 , 0000
-	mov heart1 , 10
-	mov heart2 , 10
-	mov gametimer , 255
+	mov heart1 , 3
+	mov heart2 , 3
+	mov gametimer , 150
 
 	MOV originalPlaceXP1 , 288
 	MOV originalPlaceYP1 , 128
