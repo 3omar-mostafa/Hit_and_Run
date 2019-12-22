@@ -685,10 +685,16 @@ explode:
 	Push Ax
 	
 	ADD AX , 32
+	CMP AX , 160
+	JE _label_skip_boundary_down1
 	checkBlock BX , AX,1
+	_label_skip_boundary_down1:
+
 	SUB AX , 64
+	CMP AX , 0
+	JE _label_skip_boundary_up1
 	checkBlock BX , AX,1
-	
+	_label_skip_boundary_up1:
 	pop ax
 	
 Level1_boom_p1:	
@@ -738,7 +744,7 @@ explode2:
 	
 	PUSH BX
 	ADD BX , 32
-
+	CMP 
 	checkBlock BX , AX,2
 	SUB BX , 64
 	checkBlock BX , AX,2
@@ -747,10 +753,17 @@ explode2:
 	push ax 
 	
 	ADD AX , 32
+	CMP AX , 160
+	JE _label_skip_boundary_down2
 	checkBlock BX , AX,2
+	_label_skip_boundary_down2:
+
 	SUB AX , 64
+	CMP AX , 0
+	JE _label_skip_boundary_up2
 	checkBlock BX , AX,2
-	
+	_label_skip_boundary_up2:
+
 	pop ax
 
 level1_bomb_p2:	
