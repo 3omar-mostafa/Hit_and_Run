@@ -118,9 +118,9 @@ grid DB X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , 
 	 DB X , G , X , C_B , X , G , X , B , X , G , G , X , B , X , G , X , B , X , G , X           
 	 DB X , B , C_B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , X                                                                                       
 	 DB X , G , X , B , X , G , X , B , X , G , G , X , B , X , G , X , B , X , G , X                                                                                     
-	 DB X , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , X                                                               
+	 DB X , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , C_B , X                                                               
 	 DB X , G , X , B , X , G , X , B , X , G , G , X , B , X , G , X , B , X , G , X                                                                                    
-	 DB X , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , G , G , X                                                                    
+	 DB X , B , B , B , B , B , B , B , B , B , B , B , B , B , C_B , C_B , C_B , G , G , X                                                                    
 	 DB X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X
 
 
@@ -1014,6 +1014,11 @@ isup2:
 			
 			sub bomber2Y , 16
 			
+			shr dl , 1
+			CMP dl , C
+			JNE _label_increment_score2_up
+			ADD score2 , 100
+			_label_increment_score2_up:
 			
 			
 			cmp bomb2.to_be_drawn,1
@@ -1050,6 +1055,11 @@ isdown2:
 			
 			add bomber2Y , 16
 			
+			shr dl , 1
+			CMP dl , C
+			JNE _label_increment_score2_down
+			ADD score2 , 100
+			_label_increment_score2_down:
 			
 			cmp bomb2.to_be_drawn,1
 			jne nodraw21_2
@@ -1083,6 +1093,11 @@ isright2:
 			jc temp2_25_2
 			add bomber2X , 16
 			
+			shr dl , 1
+			CMP dl , C
+			JNE _label_increment_score2_right
+			ADD score2 , 100
+			_label_increment_score2_right:
 			
 			cmp bomb2.to_be_drawn,1
 			jne nodraw23_2
@@ -1116,6 +1131,11 @@ isleft2:
 			jc finish2
 			sub bomber2X , 16
 			
+			shr dl , 1
+			CMP dl , C
+			JNE _label_increment_score2_left
+			ADD score2 , 100
+			_label_increment_score2_left:
 			
 			cmp bomb2.to_be_drawn,1
 			jne nodraw24_2
