@@ -45,6 +45,13 @@ displayResults PROC
 	mov ax , @data
 	mov ds , ax
 	
+	callSwitchToTextMode
+	
+	PUSH AX
+MOV AH , 0
+INT 16H
+POP AX
+	
 	callSwitchToGraphicsMode
 	
 	MOV DH , 5
@@ -53,7 +60,7 @@ displayResults PROC
 	MOV AH , 2
 	INT 10h
 	mov ah , 9
-	mov dl , offset yourscore
+	mov dx , offset yourscore
 	int 21h
 
 
@@ -66,7 +73,7 @@ displayResults PROC
 	MOV AH , 2
 	INT 10h
 	mov ah , 9
-	mov dl , offset yourscore
+	mov dx , offset yourscore
 	int 21h
 
 
@@ -77,6 +84,7 @@ displayResults PROC
 	mov bx , heart2
 	mov cx , score1
 	mov dx , score2
+
 
 	
 	cmp ax , bx
