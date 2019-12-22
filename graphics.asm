@@ -122,16 +122,16 @@ stackIP dw ?
 	C_B EQU C or B
 	H_B EQU H or B
 	
-;  	    0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19
-grid DB X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X
-	 DB X , G , G , H_B , B , C_B , H_B , B , B , B , B , B , B , B , B , B , B , B , B , X                                                                  
-	 DB X , G , X , C_B , X , G , X , B , X , G , G , X , B , X , G , X , B , X , G , X           
-	 DB X , B , C_B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , B , X                                                                                       
-	 DB X , G , X , B , X , G , X , B , X , G , G , X , B , X , G , X , B , X , G , X                                                                                     
-	 DB X , B , B , B , B , B , B , B , B , B , B , B , B , B , B , F_B , F_B , F_B , C_B , X                                                               
-	 DB X , G , X , B , X , G , X , B , X , G , G , X , B , X , G , X , H_B , X , G , X                                                                                    
-	 DB X , B , B , B , B , B , B , B , B , B , B , B , B , H_B , C_B , C_B , C_B , G , G , X                                                                    
-	 DB X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X , X
+;  	    0    1     2     3      4    5     6     7   8   9    10    11    12  13    14  15    16   17  18  19
+grid DB X ,  X  ,  X  ,  X   ,  X  , X   , X   , X , X , X   , X   , X   , X , X   , X , X   , X  , X , X , X
+	 DB X ,  G  ,  G  ,  B   ,  B  , B   , B   , B , B , B   , P_B , B   , B , B   , B , B   , B  , B , B , X                                                                  
+	 DB X ,  G  ,  X  ,  C_B ,  X  , G   , X   , B , X , G   , G   , X   , B , X   , G , X   , B  , X , G , X           
+	 DB X ,  B  ,  B  ,  B   ,  B  , B   , B   ,C_B, B , H_B , B   , C_B , B , B   , B , B , B  , B , B , X                                                                                       
+	 DB X ,  G  ,  X  ,  B   ,  X  , G   , X   , B , X , G   , G   , X   , B , X   , G , X   , B  , X , G , X                                                                                     
+	 DB X ,  B  ,  B  ,  B   ,  B  , B , B   , B , B , B   , B   , B   , B , H_B , B , B   , B  , B , B , X                                                               
+	 DB X ,  G  ,  X  ,  B   ,  X  , G   , X   , B , X , G   , G   , X   , B , X   , G , X   , C_B, X , G , X                                                                                    
+	 DB X ,  B  ,  B  ,  H_B ,  B  , B   , C_B , B , B , C_B , B   , B   , B , B   , B , B   , B  , G , G , X                                                                    
+	 DB X ,  X  ,  X  ,  X   ,  X  , X   , X   , X , X , X   , X   , X   , X , X   , X , X   , X  , X , X , X
 
 
 .Code
@@ -173,8 +173,10 @@ Graphics PROC
 	MOV originalPlaceXP2 , 16
 	MOV originalPlaceYP2 , 32
 	
-	
-	;call initializeGrid
+	mov bomb1_level,1
+	mov bomb2_level,1
+	call initializeGrid
+	call initializeGrid2
 	
 	
 	 bomb struc
@@ -315,6 +317,7 @@ pusha
 	mov bomberx ,ax
 	mov ax ,originalPlaceYP1
 	mov bombery , ax
+	mov bomb1_level , 1
 	pop ax
 	
 	
@@ -378,6 +381,7 @@ pusha
 	mov bomber2x ,ax
 	mov ax ,originalPlaceYP2
 	mov bomber2y , ax
+	mov bomb2_level , 1
 	pop ax
 	
 	drawpic bomber2x , bomber2y , bomerData
@@ -1400,6 +1404,50 @@ loadimages proc
 		ret
 
 loadimages endp
+
+
+
+initializeGrid2 proc
+		lea bx , grid
+		
+		;;;grid bomb power up;;;;
+		mov al,P_B
+		mov [BX+30] , al
+	
+		
+		;;;grid HP power up;;;
+		mov al,H_B
+		mov [BX+89] , al
+		
+		mov al,H_B
+		mov [BX+113] , al
+		
+		mov al,H_B
+		mov [BX+143] , al
+		
+		;;;grid coin power up;;;
+		mov al,C_B
+		mov [BX+43] , al
+		
+		mov al,C_B
+		mov [BX+67] , al
+		
+		mov al,C_B
+		mov [BX+71] , al
+		
+		mov al,C_B
+		mov [BX+136] , al
+		
+		mov al,C_B
+		mov [BX+146] , al
+		
+		mov al,C_B
+		mov [BX+149] , al
+		
+
+ret 
+initializeGrid2 endp
+
 
 
 initializeGrid proc 
