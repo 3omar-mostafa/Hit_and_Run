@@ -45,13 +45,6 @@ displayResults PROC
 	mov ax , @data
 	mov ds , ax
 	
-	callSwitchToTextMode
-	
-	PUSH AX
-MOV AH , 0
-INT 16H
-POP AX
-	
 	callSwitchToGraphicsMode
 	
 	MOV DH , 5

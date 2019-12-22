@@ -81,6 +81,8 @@ stackIP dw ?
 	bombFilehandle DW ?
 	bombData DB imagewidth*imageheight dup(2)
 	
+	bomb1_level DB 1
+	bomb2_level DB 1
 	
 	coinFilename DB 'coin.img', 0
 	coinFilehandle DW ?
@@ -110,13 +112,13 @@ stackIP dw ?
 	P1 EQU 00011000b ; 24
 	P2 EQU 00101000b ; 40
 	
-	F  EQU 00001000b ; 8 -> powerup for bomb
+	P  EQU 00001000b ; 8 -> powerup for bomb
 	C EQU  00000010b ; 2
 	H EQU  00000100b ; 4
 	
 	
 	
-	F_B EQU F or B
+	P_B EQU P or B
 	C_B EQU C or B
 	H_B EQU H or B
 	
@@ -263,7 +265,7 @@ endm drawpic
 
 
 checkTypeAndDraw MACRO x1 , y1 , type1,bombtype
-local _finish , _label_G , _label_P1 , _label_P2 , _label_F , _label_C , _label_H , _label_skip_heart1 , _label_skip_heart2 , __label_skip_heart1 , __label_skip_heart2
+local _finish , _label_G , _label_P1 , _label_P2 , _label_P , _label_C , _label_H , _label_skip_heart1 , _label_skip_heart2 , __label_skip_heart1 , __label_skip_heart2
 local increase_score1,increase_score2,decrease_score1,decrease_score2,bombtype,_label_print_heart1,_label_print_heart2 , __label_print_heart1,__label_print_heart2
 
 pusha
@@ -271,8 +273,8 @@ pusha
 	CMP type1 , G  
 	JE _label_G 
 	
-	CMP type1 , F  
-	JE _label_F 
+	CMP type1 , P  
+	JE _label_P 
 	
 	CMP type1 , H  
 	JE _label_H 
@@ -291,7 +293,7 @@ pusha
 	JMP _finish
 	
 	
-	_label_F:  
+	_label_P:  
 	drawpic x1 , y1 , PowerUpData
 	JMP _finish
 
@@ -315,10 +317,7 @@ pusha
 	mov bombery , ax
 	pop ax
 	
-	callSetCursorPosition 1,1
-	printnum originalPlaceXP1
-	callSetCursorPosition 2,2
-	printnum originalPlaceYP1
+	
 	
 	drawpic bomberx , bombery , bomerData
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;nn
@@ -444,7 +443,7 @@ ENDM checkTypeAndDraw
 
 
 checkBlock MACRO x_1 , y_1,bombtype
-local __finish , _label_G , _label_P1 , _label_P2 , _label_F , _label_C , _label_H,bombtype
+local __finish
 
 
 
@@ -514,10 +513,14 @@ drawLoop:
 	INC CX
 	CMP CX,320 
 JNE drawLoop 
+
+
+
 	MOV CX , 0
 	INC DX
 	CMP DX , 160
 JNE drawLoop
+	
 	
 	callCloseFile gridFilehandle
 	
@@ -668,7 +671,27 @@ explode:
 	pop ax
 	pop bx
 	
+	cmp bomb1_level,2
+	JNE Level1_boom_p1
 	
+	PUSH BX
+	ADD BX , 32
+
+	checkBlock BX , AX,1
+	SUB BX , 64
+	checkBlock BX , AX,1
+	
+	POP BX
+	Push Ax
+	
+	ADD AX , 32
+	checkBlock BX , AX,1
+	SUB AX , 64
+	checkBlock BX , AX,1
+	
+	pop ax
+	
+Level1_boom_p1:	
 	PUSH BX
 	ADD BX , 16
 
@@ -710,6 +733,27 @@ explode2:
 	pop ax
 	pop bx
 	
+	cmp bomb2_level,2
+	JNE level1_bomb_p2
+	
+	PUSH BX
+	ADD BX , 32
+
+	checkBlock BX , AX,2
+	SUB BX , 64
+	checkBlock BX , AX,2
+	
+	POP BX
+	push ax 
+	
+	ADD AX , 32
+	checkBlock BX , AX,2
+	SUB AX , 64
+	checkBlock BX , AX,2
+	
+	pop ax
+
+level1_bomb_p2:	
 	
 	PUSH BX
 	ADD BX , 16
@@ -726,8 +770,7 @@ explode2:
 	checkBlock BX , AX,2
 	
 	
-	callSetCursorPosition 5 , 5
-	printnum score1
+	
 	
 	jmp ___label
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -823,6 +866,11 @@ isup:
 			ADD heart1 , 1
 			_label_increment_Heart1_up:
 			
+			CMP dl , P
+			JNE _label_bomb1_powerup_up
+			mov bomb1_level,2
+			_label_bomb1_powerup_up:
+			
 			
 			cmp bomb1.to_be_drawn,1
 			jne nodraw
@@ -872,6 +920,11 @@ isdown:
 			ADD heart1 , 1
 			_label_increment_Heart1_down:
 			
+			CMP dl , P
+			JNE _label_bomb1_powerup_down
+			mov bomb1_level,2
+			_label_bomb1_powerup_down:
+			
 			cmp bomb1.to_be_drawn,1
 			jne nodraw1
 			drawpic bomb1.bombx , bomb1.bomby , bombData
@@ -918,6 +971,11 @@ isright:
 			ADD heart1 , 1
 			_label_increment_Heart1_right:
 			
+			CMP dl , P
+			JNE _label_bomb1_powerup_right
+			mov bomb1_level,2
+			_label_bomb1_powerup_right:
+			
 			cmp bomb1.to_be_drawn,1
 			jne nodraw3
 			drawpic bomb1.bombx , bomb1.bomby , bombData
@@ -963,6 +1021,11 @@ isleft:
 			JNE _label_increment_Heart1_left
 			ADD heart1 , 1
 			_label_increment_Heart1_left:
+			
+			CMP dl , P
+			JNE _label_bomb1_powerup_left
+			mov bomb1_level,2
+			_label_bomb1_powerup_left:
 			
 			cmp bomb1.to_be_drawn,1
 			jne nodraw4
@@ -1060,6 +1123,10 @@ isup2:
 			ADD heart2 , 1
 			_label_increment_Heart2_up:
 			
+			CMP dl , P
+			JNE _label_bomb2_powerup_up
+			mov bomb2_level,2
+			_label_bomb2_powerup_up:
 			
 			cmp bomb2.to_be_drawn,1
 			jne nodraw2
@@ -1106,6 +1173,11 @@ isdown2:
 			ADD heart2 , 1
 			_label_increment_Heart2_down:
 			
+			CMP dl , P
+			JNE _label_bomb2_powerup_down
+			mov bomb2_level,2
+			_label_bomb2_powerup_down:
+			
 			cmp bomb2.to_be_drawn,1
 			jne nodraw21_2
 			drawpic bomb2.bombx , bomb2.bomby , bombData
@@ -1149,6 +1221,11 @@ isright2:
 			ADD heart2 , 1
 			_label_increment_Heart2_right:
 			
+			CMP dl , P
+			JNE _label_bomb2_powerup_right
+			mov bomb2_level,2
+			_label_bomb2_powerup_right:
+			
 			cmp bomb2.to_be_drawn,1
 			jne nodraw23_2
 			drawpic bomb2.bombx , bomb2.bomby , bombData
@@ -1191,6 +1268,11 @@ isleft2:
 			JNE _label_increment_Heart2_left
 			ADD heart2 , 1
 			_label_increment_Heart2_left:
+			
+			CMP dl , P
+			JNE _label_bomb2_powerup_left
+			mov bomb2_level,2
+			_label_bomb2_powerup_left:
 			
 			cmp bomb2.to_be_drawn,1
 			jne nodraw24_2
