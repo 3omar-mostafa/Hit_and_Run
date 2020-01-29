@@ -1,179 +1,130 @@
-.Model Small
-.386 ; sets the instruction set of 80386 prosessor
-.Stack 2048
-; These are External PROCs in draw.asm
-; The linker will join them
-EXTRN drawColumnUp:NEAR
-EXTRN drawColumnDown:NEAR
-EXTRN drawRowLeft:NEAR
-EXTRN drawRowRight:NEAR
+.MODEL SMALL
+.STACK 2048
+.386 ; sets the instruction set of 80386 processor
 
-; Sizes for letters :
-; extra large , large , medium , small , extra small
-lineWidthXL EQU 8
-lineWidthL  EQU 6
-lineWidthM  EQU 4
-lineWidthS  EQU 2
-lineWidthXS EQU 1
+PUBLIC displayResults
+
 
 ; These procedures are public
 ; i.e. can be called from another assembly file
 ; shows the effect of drawing letters on the screen
 
-EXTRN letterDrawingSpeed:BYTE
-
 INCLUDE colors.inc
 INCLUDE alphabet.inc
 INCLUDE inout.inc
 
-.Data
-time db ?
+.DATA
+    yourScore DB "Score = " , '$'
 
-yourscore DB 'Score = ' , '$'
+    ; Sizes for letters :
+    ; extra large , large , medium , small , extra small
+    lineWidthXL EQU 8
+    lineWidthL  EQU 6
+    lineWidthM  EQU 4
+    lineWidthS  EQU 2
+    lineWidthXS EQU 1
+
 .CODE
-
-EXTRN score1:WORD
-EXTRN score2:WORD
-EXTRN heart1:WORD
-EXTRN heart2:WORD
-
-PUBLIC displayResults
 
 displayResults PROC
 
-
-	mov ax , @data
-	mov ds , ax
+    ; Parameters:
+    ; AL -> Player1.lives
+    ; AH -> Player2.lives
+    ; CX -> Player1.score
+    ; DX -> Player2.score
 	
 	callSwitchToGraphicsMode
 	
-	MOV DH , 5
-	MOV DL , 5
-	MOV BH , 0
-	MOV AH , 2
-	INT 10h
-	mov ah , 9
-	mov dx , offset yourscore
-	int 21h
+	callSetCursorPosition 5 , 5
 
+	callPrintString yourScore
 
-	printnum score2
+	callPrintNumber DX
 	
-	
-	MOV DH , 5
-	MOV DL , 24
-	MOV BH , 0
-	MOV AH , 2
-	INT 10h
-	mov ah , 9
-	mov dx , offset yourscore
-	int 21h
+	callSetCursorPosition 24 , 5
 
+	callPrintString yourScore
 
-	printnum score1
-	
-
-	mov ax , heart1
-	mov bx , heart2
-	mov cx , score1
-	mov dx , score2
-
-
-	
-	cmp ax , bx
-	jb player1Win
-	
-	cmp ax , bx
-	jg player1Lose
-	
-	cmp cx , dx
-	jb player1Win
-	
-	cmp cx , dx
-	jg player1Lose
+	callPrintNumber CX
 	
 	
-	draw_D 	02Bh	70      	  			70	lineWidthXL
-    draw_R 	02Bh	70+6*lineWidthXL  		70	lineWidthXL
-    draw_A 	02Bh	70+12*lineWidthXL		70	lineWidthXL
-    draw_W 	02Bh	70+18*lineWidthXL		70	lineWidthXL
+	CMP AL , AH
+	JB _label_player1_win
 	
+	CMP AL , AH
+	JG _label_player1_loses
 	
-	jmp exit
-
-
-player1Win:
-
-	callDrawColumnUp    0fh lineWidthL	150 0  200
-
-    draw_Y 	02fh	50      	  			70	lineWidthM
-    draw_O 	02fh	50+6*lineWidthM  		70	lineWidthM
-    draw_U 	02fh	50+12*lineWidthM 		70	lineWidthM
+	CMP CX , DX
+	JB _label_player1_win
 	
-    draw_W 	02fh	50				 		120	lineWidthM
-    draw_I 	02fh	50+6*lineWidthM 		120	lineWidthM
-    draw_N 	02fh	50+12*lineWidthM 		120	lineWidthM
-	
-	draw_Y 	28h		190      	  			70	lineWidthM
-    draw_O 	28h		190+6*lineWidthM  		70	lineWidthM
-    draw_U 	28h		190+12*lineWidthM 		70	lineWidthM
-	
-    draw_L 	28h		180				 		120	lineWidthM
-    draw_O 	28h		180+6*lineWidthM 		120	lineWidthM
-    draw_S 	28h		180+12*lineWidthM 		120	lineWidthM
-    draw_E 	28h		180+18*lineWidthM 		120	lineWidthM
-	
-	jmp exit
-
-player1Lose:
-
-	callDrawColumnUp    0fh lineWidthL	150 0  200
-
-	draw_Y 	02fh	190      	  			70	lineWidthM
-    draw_O 	02fh	190+6*lineWidthM  		70	lineWidthM
-    draw_U 	02fh	190+12*lineWidthM 		70	lineWidthM
-	
-    draw_W 	02fh	190				 		120	lineWidthM
-    draw_I 	02fh	190+6*lineWidthM 		120	lineWidthM
-    draw_N 	02fh	190+12*lineWidthM 		120	lineWidthM
-	
-	
-	draw_Y 	28h		50      	  			70	lineWidthM
-    draw_O 	28h		50+6*lineWidthM  		70	lineWidthM
-    draw_U 	28h		50+12*lineWidthM 		70	lineWidthM
-	
-    draw_L 	28h		40				 		120	lineWidthM
-    draw_O 	28h		40+6*lineWidthM 		120	lineWidthM
-    draw_S 	28h		40+12*lineWidthM 		120	lineWidthM
-    draw_E 	28h		40+18*lineWidthM 		120	lineWidthM
+	CMP CX , DX
+	JG _label_player1_loses
 	
 
-exit:
-	mov si , 5
+    _label_player1_player2_draw:
+        draw_D 	color_orange , 70      	  		 , 70 , lineWidthXL
+        draw_R 	color_orange , 70+6*lineWidthXL  , 70 , lineWidthXL
+        draw_A 	color_orange , 70+12*lineWidthXL , 70 , lineWidthXL
+        draw_W 	color_orange , 70+18*lineWidthXL , 70 , lineWidthXL
 	
-wait1:
-	call delay1sec
-	dec si
-	jnz wait1
+	
+	JMP _label_finish
 
+
+    _label_player1_win:
+
+        callDrawColumnUp color_white , lineWidthL , 150 , 0 , 200
+
+        draw_Y 	color_bright_green , 50                , 70 , lineWidthM
+        draw_O 	color_bright_green , 50+6*lineWidthM   , 70 , lineWidthM
+        draw_U 	color_bright_green , 50+12*lineWidthM  , 70 , lineWidthM
+        
+        draw_W 	color_bright_green , 50               , 120 , lineWidthM
+        draw_I 	color_bright_green , 50+6*lineWidthM  , 120 , lineWidthM
+        draw_N 	color_bright_green , 50+12*lineWidthM , 120 , lineWidthM
+        
+        draw_Y 	color_red , 190               , 70 , lineWidthM
+        draw_O 	color_red , 190+6*lineWidthM  , 70 , lineWidthM
+        draw_U 	color_red , 190+12*lineWidthM , 70 , lineWidthM
+        
+        draw_L 	color_red , 180               , 120 , lineWidthM
+        draw_O 	color_red , 180+6*lineWidthM  , 120 , lineWidthM
+        draw_S 	color_red , 180+12*lineWidthM , 120 , lineWidthM
+        draw_E 	color_red , 180+18*lineWidthM , 120 , lineWidthM
+	
+	JMP _label_finish
+
+
+    _label_player1_loses:
+
+        callDrawColumnUp color_white , lineWidthL , 150 , 0 , 200
+
+        draw_Y 	color_bright_green , 190               , 70 , lineWidthM
+        draw_O 	color_bright_green , 190+6*lineWidthM  , 70 , lineWidthM
+        draw_U 	color_bright_green , 190+12*lineWidthM , 70 , lineWidthM
+        
+        draw_W 	color_bright_green , 190               , 120 , lineWidthM
+        draw_I 	color_bright_green , 190+6*lineWidthM  , 120 , lineWidthM
+        draw_N 	color_bright_green , 190+12*lineWidthM , 120 , lineWidthM
+        
+        
+        draw_Y 	color_red , 50               , 70 , lineWidthM
+        draw_O 	color_red , 50+6*lineWidthM  , 70 , lineWidthM
+        draw_U 	color_red , 50+12*lineWidthM , 70 , lineWidthM
+        
+        draw_L 	color_red , 40               , 120 , lineWidthM
+        draw_O 	color_red , 40+6*lineWidthM  , 120 , lineWidthM
+        draw_S 	color_red , 40+12*lineWidthM , 120 , lineWidthM
+        draw_E 	color_red , 40+18*lineWidthM , 120 , lineWidthM
+        
+
+    _label_finish:
+
+        callDelayInSeconds 3
 
 	RET
 displayResults ENDP
 
-
-
-delay1sec PROC
-    delay:
-    
-    ; get system time
-    MOV AH , 2ch
-    INT 21h
-    
-    CMP DH , time
-    JE delay
-    MOV time , DH
-    
-    RET
-delay1sec ENDP
 
 END

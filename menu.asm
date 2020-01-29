@@ -2,29 +2,11 @@
 
 .MODEL SMALL
 .STACK 2048
-.386 ; sets the instruction set of 80386 prosessor
+.386 ; sets the instruction set of 80386 processor
 
-.DATA
+PUBLIC MenuScreen
 
-F1Scancode  EQU  3Bh
-F2Scancode  EQU  3Ch
-F3Scancode  EQU  3Dh
-F4Scancode  EQU  3Eh
-ESCScancode EQU  01h
-
-stackIP dw 0
-
-imagewidth  EQU 200
-imageheight EQU 200
-
-positionInFile DW 0
-menuFilename DB 'menu.img', 0
-menuFilehandle DW ?
-menuData DB ?
-
-pressedKeyScanCode DB ?
-
-EXTRN Graphics:NEAR
+EXTRN Game:NEAR
 EXTRN Chat:NEAR
 ; Chat Windows variables
 EXTRN windowOneStartX:BYTE
@@ -39,124 +21,85 @@ EXTRN windowTwoEndY:BYTE
 EXTRN WindowTwoColor:BYTE
 
 INCLUDE inout.inc
+INCLUDE draw.inc
+INCLUDE serial.inc
+
+.DATA
+
+	F1_SCAN_CODE  EQU  3Bh
+	F2_SCAN_CODE  EQU  3Ch
+	F3_SCAN_CODE  EQU  3Dh
+	F4_SCAN_CODE  EQU  3Eh
+	ESC_SCAN_CODE EQU  01h
+
+	menuImageWidth  EQU 200
+	menuImageHeight EQU 200
+
+	menuFilename DB 'menu.img', 0
+	menuFileHandle DW ?
 
 .CODE
 
 
-PUBLIC MenuScreen
-
-
 MenuScreen PROC
-	
-	MOV AX , @DATA
-	MOV DS , AX
 
-	mov stackIP , sp
-start:
+	callInitializeUART
 
-	mov positionInFile , 0
-	callSwitchToGraphicsMode
+	callOpenFile menuFilename,menuFileHandle
+	
+	start:
 
-	callOpenFile menuFilename,menuFilehandle
+		callSwitchToGraphicsMode
 
-	
-	LEA BX , menuData ; BL contains index at the current drawn pixel
-	
-	MOV CX,60 ; x1
-	MOV DX,0 ; y1
-	MOV AH,0ch
-	
-; Drawing loop
-drawLoop:
+		callDrawLargeImage menuFileHandle , 60 , 0 , menuImageWidth , menuImageHeight
 
-pusha
-	;JUMP TO POSITION INSIDE THE FILE.                            <==============
-  mov  ah, 42h          	;SERVICE FOR SEEK.
-  mov  al, 0            	;START FROM THE BEGINNING OF FILE.
-  mov  bx, menuFilehandle  	;FILE.
-  mov  cx, 0            	;THE FILE POSITION MUST BE PLACED IN
-  mov  dx, positionInFile   ;CX:DX, EXAMPLE, TO JUMP TO POSITION
-  int  21h
-
-;READ ONE CHAR FROM CURRENT FILE POSITION.
-  mov  ah, 3fh          ;SERVICE TO READ FROM FILE.
-  mov  bx, menuFilehandle
-  mov  cx, 1            ;HOW MANY BYTES TO READ.
-  inc positionInFile
-  lea  dx, menuData       ;WHERE TO STORE THE READ BYTES.  
-  int  21h
+	getKey:
+		callGetPressedKey
+				
+		CMP AH , F1_SCAN_CODE
+		JE start_chatting
+		
+		CMP AH , F2_SCAN_CODE
+		JE start_game
+		
+		CMP AH , ESC_SCAN_CODE
+		JNE getKey
+		
+		JMP exit
+		
+		
+		start_chatting:
+			CALL prepareChat
+			CALL Chat
+		JMP start
+		
+		start_game:
+			CALL Game
+		JMP start
 	
-popa
-	
-	MOV AL,[BX]
-	INT 10h 
-	INC CX
-	CMP CX,260 
-JNE drawLoop 
-
-	MOV CX , 60
-	INC DX
-	CMP DX , 200
-JNE drawLoop
-	
-	
-	callCloseFile menuFilehandle
-	
-
-getKey:
-    callWaitForAnyKey
-	mov pressedKeyScanCode , AH
-	
-	CMP pressedKeyScanCode , F1Scancode
-	JE start_chatting
-	
-	CMP pressedKeyScanCode , F2Scancode
-	JE start_game
-	
-	
-	CMP pressedKeyScanCode , ESCScancode
-	JNE getKey
-	
-	JMP exit
-	
-	
-	; TODO: to be continued
-	start_chatting:
-	CALL prepareChat
-	CALL Chat
-	JMP start
-	
-	start_game:
-	CALL Graphics
-	JMP start
-	
-exit:
-	
-	mov sp , stackIP
-	callSwitchToTextMode
-	
-	; return control to operating system
-    MOV AH , 4ch
-    INT 21H
-	
+	exit:
+		callCloseFile menuFileHandle
+		RET
 MenuScreen ENDP
+
 
 prepareChat PROC
 
-callSwitchToTextMode
+	callSwitchToTextMode
 
-MOV windowOneStartX , 0
-MOV windowOneEndX , 79
-MOV windowOneStartY , 0
-MOV windowOneEndY , 12
-MOV WindowOneColor , 1FH
+	MOV windowOneStartX , 0
+	MOV windowOneEndX , 79
+	MOV windowOneStartY , 0
+	MOV windowOneEndY , 12
+	MOV WindowOneColor , 1FH
 
-MOV windowTwoStartX , 0
-MOV windowTwoEndX , 79
-MOV windowTwoStartY , 13
-MOV windowTwoEndY , 24
-MOV WindowTwoColor , 4FH
-RET
+	MOV windowTwoStartX , 0
+	MOV windowTwoEndX , 79
+	MOV windowTwoStartY , 13
+	MOV windowTwoEndY , 24
+	MOV WindowTwoColor , 4FH
+
+	RET
 prepareChat ENDP
 
 END

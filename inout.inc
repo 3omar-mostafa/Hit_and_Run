@@ -1,5 +1,5 @@
-; This file contains MACROs fo preparing parameters and call the real PROCs in inout.asm
-; These MACROs should be called insted of the PROCs in inout.asm
+; This file contains MACROs fo preparing parameters and CALL the real Procedures in inout.asm
+; These MACROs should be called instead of the Procedures in inout.asm
 
 ; THese procedures are external
 ; MUST be declared at another assembly file with same name,type
@@ -7,172 +7,36 @@
 
 EXTRN setCursorPosition:NEAR
 EXTRN getCursorPosition:NEAR
-EXTRN waitForAnyKey:NEAR
-EXTRN displayString:NEAR
+EXTRN getPressedKey:NEAR
+EXTRN isKeyPressed:NEAR
+EXTRN clearKeyboardBuffer:NEAR
+EXTRN isLetter:NEAR
+EXTRN readString:NEAR
+EXTRN printString:NEAR
+EXTRN printChar:NEAR
+EXTRN printNumber:NEAR
+EXTRN clearCharacters:NEAR
 EXTRN switchToTextMode:NEAR
 EXTRN switchToGraphicsMode:NEAR
 EXTRN openFile:NEAR
-EXTRN loadData:NEAR
+EXTRN loadImageData:NEAR
 EXTRN closeFile:NEAR
-EXTRN spaceforprinting:BYTE
-
-writescore2 macro score
-           pusha
-		   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;NN
-		   MOV DH,00
-		   MOV DL,00
-		   MOV BH,0
-		   MOV AH,2
-		   INT 10H
-		
-		
-		
-		
-		   MOV AH ,9
-		   MOV DX, OFFSET INDATAP1
-		   ADD DX,2
-		   INT 21H
-		   
-		   
-		   
-		   
-		   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;NN
-           ;;;set cursor;;;
-           MOV DH , 00
-           MOV DL , 06H
-           MOV BH , 0
-           MOV AH , 2
-           INT 10h
-           ;;;;;;;;;;;;;
-           mov ah , 2
-           mov dl , ':'
-           int 21h
-           ;;;;;;;;;;;;nn
-		   MOV DH , 00
-           MOV DL , 07H
-           MOV BH , 0
-           MOV AH , 2
-           INT 10h
-		   mov ah , 9
-		   mov dl , offset spaceforprinting
-		   int 21h
-		   MOV DH , 00
-           MOV DL , 07H
-           MOV BH , 0
-           MOV AH , 2
-           INT 10h
-		   ;;;;;;;;;;;;nn
-		   mov ax , score
-           printnum ax
-           popa
-ENDM       writescore2
-
-writescore1 macro score
-           pusha
-		    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;NN
-		   MOV DH,00
-		   MOV DL,18H
-		   MOV BH,0
-		   MOV AH,2
-		   INT 10H
-		   MOV AH ,9
-		   MOV DX, OFFSET INDATAP2
-		   ADD DX,2
-		   INT 21H
-		   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;NN
-           ;;;set cursor;;;
-           MOV DH , 00
-           MOV DL , 1EH
-           MOV BH , 0
-           MOV AH , 2
-           INT 10h
-           ;;;;;;;;;;;;;
-           mov ah , 2
-           mov dl , ':'
-           int 21h
-           ;;;;;;;;;;;nn
-		   MOV DH , 00
-           MOV DL , 1FH
-           MOV BH , 0
-           MOV AH , 2
-           INT 10h
-		   mov ah , 9
-		   mov dl , offset spaceforprinting
-		   int 21h
-		   MOV DH , 00
-           MOV DL ,1FH
-           MOV BH , 0
-           MOV AH , 2
-           INT 10h
-		   ;;;;;;;;;;;;nn
-		   mov ax , score
-           printnum ax
-           popa
-ENDM       writescore1
+EXTRN getSystemTime:NEAR
+EXTRN delayInSeconds:NEAR
 
 
-writeheart2 macro heart
-           pusha
-           ;;;set cursor;;;
-           MOV DH , 00
-           MOV DL , 0Eh
-           MOV BH , 0
-           MOV AH , 2
-           INT 10h
-           ;;;;;;;;;;;;;
-           mov ah , 2
-           mov dl , ':'
-           int 21h
-           ;;;;;;;;;;;;
-		   mov ax , heart
-           printnum ax
-           popa
-ENDM       writeheart2
-
-writeheart1 macro heart
-           pusha
-           ;;;set cursor;;;
-           MOV DH , 00
-           MOV DL , 26h
-           MOV BH , 0
-           MOV AH , 2
-           INT 10h
-           ;;;;;;;;;;;;;
-           mov ah , 2
-           mov dl , ':'
-           int 21h
-           ;;;;;;;;;;;;
-		   mov ax , heart
-           printnum ax
-           popa
-ENDM       writeheart1
-
-GetCurrentTime macro time
-            pusha
-			
-            mov ah , 2ch
-            int 21h
-			mov time , dh
-			
-			popa
-            
-endm GetCurrentTime 
-
+EXTRN time_seconds:BYTE
 
 
 callSetCursorPosition MACRO x , y
-	PUSH DX
-	PUSH AX
-	PUSH BX
+	PUSHA
 	
 	MOV DL , x
 	MOV DH , y
 	
 	CALL setCursorPosition
 	
-	POP BX
-	POP AX
-	POP DX
+	POPA
 ENDM callSetCursorPosition
 
 
@@ -191,26 +55,128 @@ ENDM callGetCursorPosition
 
 
 
-; @Returns Pressed key  scancode -> AH
-; @Returns Pressed key ASCIIcode -> AL
 callWaitForAnyKey MACRO
-	CALL waitForAnyKey
+	PUSH AX
+
+	CALL getPressedKey
+
+	POP AX
 ENDM callWaitForAnyKey
 
-;@string must be a memory location terminated with '$'
-callDisplayString MACRO string
+; return AH -> scan code , AL -> ASCII code
+callGetPressedKey MACRO
+
+	CALL getPressedKey
+
+ENDM callGetPressedKey
+
+
+; @Return answer in Zero flag
+; Zero Flag = 0 -> true , Zero Flag = 1 -> false
+; JNZ -> true , JZ -> false
+callIsKeyPressed MACRO
+	PUSH AX
+
+    CALL isKeyPressed
+
+    POP AX
+ENDM callIsKeyPressed
+
+
+callClearKeyboardBuffer MACRO
+	PUSH AX
+
+	CALL clearKeyboardBuffer
+
+	POP AX
+ENDM callClearKeyboardBuffer
+
+
+; @Return result in carry flag
+; Carry = 1 -> true , Carry = 0 -> false
+; JC -> true , JNC -> false
+callIsLetter MACRO letter
+	PUSH AX
+
+	MOV AL , letter
+	CALL isLetter
+
+	POP AX
+ENDM callIsLetter
+
+
+; inputBuffer should have 2 bytes before it determining the size of buffer
+; inputBuffer offsets:
+; inputBuffer-2 -> max bytes to read including Enter
+; inputBuffer-1 -> @return the actual number of characters read
+; inputBuffer   -> the input string
+; returned string is saved at memory location of inputBuffer
+callReadString MACRO inputBuffer
+	PUSHA
 	
+	LEA DX , inputBuffer
+	SUB DX , 2
+	
+	CALL readString
+
+	POPA
+ENDM callReadString
+
+
+
+; string must be a memory location terminated with '$'
+; string is printed at the current cursor position
+callPrintString MACRO string
 	PUSH AX
 	PUSH DX
 	
 	LEA DX , string 
 	
-	CALL displayString
+	CALL printString
 
 	POP DX
 	POP AX
-ENDM callDisplayString
+ENDM callPrintString
 
+
+; character is printed at the current cursor position
+callPrintChar MACRO char
+	PUSH AX
+	PUSH DX
+	
+	MOV DL , char
+	
+	CALL printChar
+
+	POP DX
+	POP AX
+ENDM callPrintChar
+
+
+; number is assumed as byte/word variable/register
+; number is printed at the current cursor position
+callPrintNumber MACRO number
+	PUSHA
+	
+    MOVZX EAX , number
+    CALL printNumber
+
+	POPA
+ENDM callPrintNumber
+
+
+; Clear number of characters to reprint over them without overlapping
+; i.e. printing spaces to clear the screen
+; Note: it does not change the cursor position
+callClearCharacters MACRO numberOfChars
+	PUSHA
+
+	MOV CH , 0
+	MOV CL , numberOfChars
+	CALL clearCharacters
+
+	POPA
+ENDM callClearCharacters
 
 
 callSwitchToTextMode MACRO
@@ -233,98 +199,116 @@ ENDM callSwitchToGraphicsMode
 
 
 ; open file from the device with filename
-; @ returns the output pointer to this file in fieHandle
-callOpenFile MACRO filenamea , fileHandlea
-	; Open file
+; @ returns the output pointer to this file in fileHandle
+callOpenFile MACRO filename , fileHandle
+    PUSHA
+	
+    LEA DX , Filename
+    LEA SI , fileHandle
+    CALL openFile
 
-    MOV AH, 3Dh
-    MOV AL, 0 ; read only
-    LEA DX, Filenamea
-    INT 21h
-    
-    ; you should check carry flag to make sure it worked correctly
-    ; carry = 0 -> successful , file handle -> AX
-    ; carry = 1 -> failed , AX -> error code
-     
-    MOV [Filehandlea], AX
-    
-
+    POPA
 ENDM callOpenFile
 
 
 
-; Loads data from image with its filehandle and save them in imageData
-; dimensions of the image is _width , _height
-; imageData is assumed an array with available space to store the data 
-callLoadData MACRO filehandleb , imageData , _width , _height
-	MOV AH,3Fh
-    MOV BX, [Filehandleb]
-    MOV CX,_width*_height ; number of bytes to read
-    LEA DX, imageData
-    INT 21h
+; Loads data from image with its fileHandle and save them in imageData
+; dimensions of the image is 16px * 16px
+; imageData is assumed an array with available space to store the data (16 * 16 bytes)
+callLoadImageData MACRO fileHandle , imageData
+    PUSHA
 
-ENDM callLoadData 
+    MOV BX , [fileHandle]
+    LEA DX , imageData
+    CALL loadImageData
+
+    POPA
+ENDM callLoadImageData
 
 
-; Closes the opened file with its coresponding fieHandle
-callCloseFile MACRO filehandle 
-	MOV AH, 3Eh
-	MOV BX, [Filehandle]
+; Closes the opened file with its corresponding fileHandle
+callCloseFile MACRO fileHandle 
+    PUSHA
 
-	INT 21h
- 
+    LEA SI , fileHandle
+    CALL closeFile
+
+    POPA 
 ENDM callCloseFile
 
+callGetSystemTime MACRO
+	PUSHA
+
+	CALL getSystemTime
+
+	POPA
+ENDM callGetSystemTime
+
+callDelayInSeconds MACRO seconds
+	PUSHA
+
+	MOV CH , 0
+	MOV CL , seconds
+	CALL delayInSeconds
+
+	POPA
+ENDM callDelayInSeconds
 
 
-printnum MACRO inputdata ; inputdata is assumed as Word variable
-    LOCAL start , print ; MUST be at the 2nd line , DO NOT LEAVE EMPTY LINE
- 
-	pusha
+; Memory Macros 
+; Same interface as Assembly instructions but for memory to memory operations
+
+MOV_MEMORY_WORD MACRO destination , source
+
+	PUSH source
+	POP destination
+
+ENDM MOV_MEMORY_WORD
+
+
+MOV_MEMORY_BYTE MACRO destination , source
+	PUSH AX
+
+	MOV AL , source
+	MOV destination , AL
+
+	POP AX
+ENDM MOV_MEMORY_BYTE
+
+
+
+XCHG_MEMORY_WORD MACRO var_1 , var_2
+
+	PUSH var_1
+	PUSH var_2
+
+	POP var_1
+	POP var_2
+
+ENDM XCHG_MEMORY_WORD
+
+
+XCHG_MEMORY_BYTE MACRO var_1 , var_2
+	PUSH AX
+
+	MOV AL , var_1
+	MOV AH , var_2
+
+	MOV var_1 , AH
+	MOV var_2 , AL
 	
-    MOVzx AX , inputdata
-    MOV CX , 0
-    MOV DX , 0
-    MOV BX , 10
-
-    start:        
-        DIV BX         ; Divides the input every iteration by 10 to extract one digit from it
-        ADD DL , '0'   ; Adds '0' to convert the digit to its ascii value
-        PUSH DX        ; Push it to the stack because we extract values from right and we want to print it from the left
-        MOV DX , 0     ; resets the DX register in order not to have division overflow (div treats the number as DX:AX)
-        INC CX         ; count the number of digits to pop them from the stack and print
-
-    CMP AX , 0
-    JNE start
-
-    print:
-        POP DX
-        MOV AH , 2
-        INT 21h
-    LOOP print
-
-	popa
-ENDM printnum
+	POP AX
+ENDM XCHG_MEMORY_BYTE
 
 
-printTime MACRO
+CMP_MEMORY MACRO var_1 , var_2
+	PUSH EAX
+	PUSH EBX
 
-   MOV DH , 0
-   MOV DL , 19
-   MOV BH , 0
-   MOV AH , 2
-   INT 10h
-   mov ah , 9
-   mov dl , offset spaceforprinting
-   int 21h
+	MOVZX EAX , var_1
+	MOVZX EBX , var_2
+	SUB EAX , EBX
 
-
-   MOV DH , 0
-   MOV DL , 19
-   MOV BH , 0
-   MOV AH , 2
-   INT 10h
-   printnum gametimer
-
-
-ENDM printTime
+	POP EBX
+	POP	EAX
+ENDM CMP_MEMORY
