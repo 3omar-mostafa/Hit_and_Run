@@ -5,6 +5,7 @@
 ; This is an external PROC that is defined in welcome.asm
 ; The linker will join them
 EXTRN displayWelcomeScreen:NEAR
+INCLUDE inout.inc
 
 .DATA
 
@@ -19,8 +20,7 @@ Main PROC FAR
 	CALL displayWelcomeScreen
 	
 	; Press any key to exit
-	CALL waitForAnyKey
-	CALL switchToTextMode
+	callSwitchToTextMode
 	CALL exitProgram
 	
 Main ENDP
@@ -33,7 +33,8 @@ initializeDataSegment PROC
 	RET
 initializeDataSegment ENDP
 
-	; return control to operating system
+
+; return control to operating system
 exitProgram PROC
 
 	MOV AH , 4Ch
@@ -41,41 +42,5 @@ exitProgram PROC
 
 exitProgram ENDP
 
-
-
-; @Returns Pressed key scan code -> AH
-; @Returns Pressed key ASCII code -> AL
-waitForAnyKey PROC
-	MOV AH , 0
-	INT 16h
-	
-	RET
-waitForAnyKey ENDP
-
-
-
-switchToTextMode PROC
-	PUSH AX
-	
-	MOV AH,0          
-	MOV AL,03h
-	INT 10h 
-	
-	POP AX
-	RET
-switchToTextMode ENDP
-
-
-
-switchToGraphicsMode PROC
-	PUSH AX
-	
-	MOV AH, 0
-	MOV AL, 13h
-	INT 10h
-
-	POP AX
-	RET
-switchToGraphicsMode ENDP
 
 END Main

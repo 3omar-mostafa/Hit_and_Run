@@ -21,9 +21,12 @@ EXTRN letterDrawingSpeed:BYTE ; MIN value is 1
 
 INCLUDE colors.inc
 INCLUDE alphabet.inc
+INCLUDE inout.inc
 
 .DATA
 
+	message DB "Press any key to Continue",'$'
+	
 	; Sizes for letters :
 	; extra large , large , medium , small , extra small
 	LINE_WIDTH_XL EQU 8
@@ -48,9 +51,15 @@ INCLUDE alphabet.inc
 	START_X4 EQU 140
 	START_Y4 EQU 110
 
+	; for Press any key to Continue
+	START_X5 EQU 7
+	START_Y5 EQU 150
+
 .CODE
 
 displayWelcomeScreen PROC
+
+	callSwitchToGraphicsMode
 
 	MOV letterDrawingSpeed , 60
 
@@ -81,6 +90,9 @@ displayWelcomeScreen PROC
 	draw_U COLOR_LIGHT_BLUE , START_X3+36*LINE_WIDTH_L , START_Y3 , LINE_WIDTH_L
 	draw_N COLOR_LIGHT_BLUE , START_X3+42*LINE_WIDTH_L , START_Y3 , LINE_WIDTH_L
 	
+	callSetCursorPosition START_X5 , START_Y5
+	callPrintString message
+	callWaitForAnyKey
 
 	RET
 displayWelcomeScreen ENDP

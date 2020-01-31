@@ -9,6 +9,7 @@ if not exist link.exe echo Please download it and make sure it is link.exe
 if exist main.obj erase main.obj
 if exist draw.obj erase draw.obj
 if exist welcome.obj erase welcome.obj
+if exist inout.obj erase inout.obj
 
 if exist game.exe erase game.exe
 
@@ -24,7 +25,11 @@ masm welcome.asm /z /Zi /Zd /v > welcome.log ,welcome ;
 If not exist welcome.obj echo Assembling Failed , Check welcome.log for errors
 If not exist welcome.obj goto end
 
-link  main.obj draw.obj welcome.obj > link.log ,game.exe,nul;
+masm inout.asm /z /Zi /Zd /v > inout.log ,inout ;
+If not exist inout.obj echo Assembling Failed , Check inout.log for errors
+If not exist inout.obj goto end
+
+link main.obj draw.obj welcome.obj inout.obj > link.log ,game.exe,nul;
 If not exist game.exe echo Linking Failed , Check link.log for errors
 If not exist game.exe goto end
 
