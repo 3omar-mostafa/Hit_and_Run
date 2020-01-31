@@ -16,6 +16,9 @@ PUBLIC getPressedKey
 PUBLIC printString
 PUBLIC switchToTextMode
 PUBLIC switchToGraphicsMode
+PUBLIC openFile
+PUBLIC loadImageData
+PUBLIC closeFile
 .CODE
 
 setCursorPosition PROC
@@ -99,6 +102,53 @@ switchToGraphicsMode PROC
 	
 	RET
 switchToGraphicsMode ENDP
+
+; @Return result in carry flag
+; Carry = 0 -> successful , Carry = 1 -> failed
+; JNC -> succeeded , JC -> failed
+openFile PROC 
+
+	; Parameters
+	; DX -> filename
+	; SI -> fileHandle
+
+	MOV AH , 3Dh
+	MOV AL , 0 ; read only
+	INT 21h ; return file handle in AX if succeeded
+	MOV [SI] , AX
+	
+	RET
+openFile ENDP
+
+
+; Loads data from image with its fileHandle and save them in imageData
+; dimensions of the image is 16 px * 16 px
+; imageData is assumed an array with available space to store the data (16 * 16 bytes)
+loadImageData PROC
+
+	; Parameters
+	; SI -> fileHandle
+	; CX -> number of bytes to read
+	; DX -> imageData (where to save the data we get from the file)
+
+	MOV AH , 3Fh
+	MOV CX , 16*16 ; size the image
+	INT 21h
+	RET
+loadImageData ENDP 
+
+
+closeFile PROC
+	
+	; Parameters
+	; SI -> fileHandle
+	
+	MOV AH , 3Eh
+	MOV BX , [SI]
+
+	INT 21h
+	RET
+closeFile ENDP
 
 
 END

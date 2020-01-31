@@ -12,6 +12,9 @@ EXTRN isKeyPressed:NEAR
 EXTRN printString:NEAR
 EXTRN switchToTextMode:NEAR
 EXTRN switchToGraphicsMode:NEAR
+EXTRN openFile:NEAR
+EXTRN loadImageData:NEAR
+EXTRN closeFile:NEAR
 
 callSetCursorPosition MACRO x , y
 	PUSHA
@@ -98,4 +101,43 @@ callSwitchToGraphicsMode MACRO
 	
 	POP AX
 ENDM callSwitchToGraphicsMode
+
+
+; open file from the device with filename
+; @ returns the output pointer to this file in fileHandle
+callOpenFile MACRO filename , fileHandle
+	PUSHA
+	
+	LEA DX , Filename
+	LEA SI , fileHandle
+	CALL openFile
+
+	POPA
+ENDM callOpenFile
+
+
+
+; Loads data from image with its fileHandle and save them in imageData
+; dimensions of the image is 16px * 16px
+; imageData is assumed an array with available space to store the data (16 * 16 bytes)
+callLoadImageData MACRO fileHandle , imageData
+	PUSHA
+
+	MOV BX , [fileHandle]
+	LEA DX , imageData
+	CALL loadImageData
+
+	POPA
+ENDM callLoadImageData
+
+
+; Closes the opened file with its corresponding fileHandle
+callCloseFile MACRO fileHandle 
+	PUSHA
+
+	LEA SI , fileHandle
+	CALL closeFile
+
+	POPA 
+ENDM callCloseFile
 
