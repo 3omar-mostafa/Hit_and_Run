@@ -10,6 +10,9 @@ EXTRN drawColumnDown:NEAR
 EXTRN drawRowLeft:NEAR
 EXTRN drawRowRight:NEAR
 
+EXTRN drawLargeImage:NEAR
+EXTRN drawImage:NEAR
+
 
 ; Draw Vertical Line from top to bottom with small speed to show effect of drawing
 ; @inputs: color -> 8 bits drawing color
@@ -115,3 +118,44 @@ callDrawRowRight MACRO color , lineWidth , x1 , y1 , x2
 
 	POPA
 ENDM callDrawRowRight
+
+
+
+; Draw Large image at position x1 , y1
+; The difference Between This Function and drawImage is that here we have a large image
+; and can not load the entire image because we will run out of memory
+; Therefore Here we load one byte at a time and draw it to use less memory
+
+; This Macro prepares parameters needed by drawLargeImage Procedure
+callDrawLargeImage MACRO fileHandle , x1 , y1 ,imageWidth , imageHeight
+	PUSHA
+
+	MOV BX , fileHandle 
+	
+	MOV CX , x1 ; x1
+	MOV DX , y1 ; y1
+	MOV SI , x1+imageWidth ; SI = x2
+	MOV DI , y1+imageHeight ; DI = y2
+
+	CALL drawLargeImage
+	
+	POPA
+ENDM callDrawLargeImage
+
+
+
+; Draw 16px * 16px image at position x1 , y1
+; This Macro prepares parameters needed by drawImage Procedure
+callDrawImage MACRO x1 , y1 , imageData
+	PUSHA
+	
+	LEA BP , imageData ; BP contains index at the current drawn pixel
+
+	MOV CX , x1 ; x1
+	MOV DX , y1 ; y1
+	
+	CALL drawImage 
+
+	POPA
+ENDM callDrawImage
+

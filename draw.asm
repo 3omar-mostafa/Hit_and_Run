@@ -15,6 +15,8 @@ PUBLIC drawColumnUp
 PUBLIC drawColumnDown
 PUBLIC drawRowLeft
 PUBLIC drawRowRight
+PUBLIC drawLargeImage
+PUBLIC drawImage
 
 PUBLIC letterDrawingSpeed
 
@@ -24,6 +26,10 @@ INCLUDE colors.inc
 
 	maxDrawingSpeed EQU 512000
 	letterDrawingSpeed DB 60
+	; I use these variable because sometimes I run out of Registers
+	_variable_position_x1 DW ?
+	position_in_file DW ?
+	imageData DB ?
 
 .CODE
 
@@ -178,5 +184,96 @@ drawRowRight PROC
 
 	RET
 drawRowRight ENDP
+
+
+
+; Draw Large image at position x1 , y1
+; The difference Between This Function and drawImage is that here we have a large image
+; and can not load the entire image because we will run out of memory
+; Therefore Here we load one byte at a time and draw it to use less memory
+drawLargeImage PROC
+
+	; Parameters :
+	; CX -> x1
+	; DX -> y1
+	; SI -> x2
+	; DI -> y2
+	; BX -> fileHandle
+
+	MOV BP , CX
+
+	MOV AH , 0Ch ; Draw pixel mode of int 10h
+	MOV position_in_file , 0 ; stores the current position in the file
+
+	_label_drawLargeImage_drawLoop:
+
+		; Read the next byte from the file
+		PUSHA
+			; JUMP TO POSITION INSIDE THE FILE.
+			MOV AH , 42h
+			MOV AL , 0 ; START FROM THE BEGINNING OF FILE.
+			MOV CX , 0 ; FILE POSITION is CX:DX
+			MOV DX , position_in_file
+			INT 21h
+
+			;READ ONE CHAR FROM CURRENT FILE POSITION.
+			MOV AH , 3Fh
+			MOV CX , 1 ; HOW MANY BYTES TO READ.
+			LEA DX , imageData ; WHERE TO STORE THE READ BYTES.  
+			INT 21h
+			
+		POPA
+		
+		INC position_in_file  ; Move to the next byte in the file
+
+		; Draw the pixel we read from the file
+		MOV AL , imageData
+		INT 10h ; Draw the  pixel
+		INC CX ; x++
+		CMP CX , SI ; checks if x < x2
+	JNE _label_drawLargeImage_drawLoop 
+		MOV CX , BP ; Cx = x1
+		INC DX  ; y++ (move to next row)
+		CMP DX , DI ; checks if y < y2
+	JNE _label_drawLargeImage_drawLoop
+
+	RET
+drawLargeImage ENDP
+
+
+; Draw 16px * 16px image at position x1 , y1
+; THis Procedure is called from callDrawImage MACRO which prepares its parameters
+; DO NOT call it directly 
+drawImage PROC
+
+	; Parameters :
+	; CX -> x1
+	; DX -> y1
+	; BP -> imageData
+
+	MOV _variable_position_x1 , CX
+	MOV SI , CX ; SI = x1
+	ADD SI , 16 ; SI = x2 = x1 + 16
+	MOV DI , DX ; DI = y1
+	ADD DI , 16 ; DI = y2 = y2 + 16
+	MOV BH , 0 ; BH contains the page number to draw in 
+
+	MOV AH , 0Ch ; Draw pixel mode of INT 10h
+	_label_drawImage_drawLoop:
+
+			MOV AL , DS:[BP] ; Move current pixel color Data from the image to AL 
+			INT 10h ; Draw the pixel
+			INC BP ; Move to next pixel in image
+			INC CX ; x++
+			CMP CX , SI ; checks if x < x2
+		JNE _label_drawImage_drawLoop
+		
+		MOV CX , _variable_position_x1
+		INC DX  ; y++ (move to next row)
+		CMP DX , DI ; checks if y < y2
+	JNE _label_drawImage_drawLoop
+
+	RET
+drawImage ENDP
 
 END
