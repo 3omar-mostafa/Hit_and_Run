@@ -5,6 +5,8 @@
 ; This is an external PROC that is defined in welcome.asm
 ; The linker will join them
 EXTRN displayWelcomeScreen:NEAR
+EXTRN MenuScreen:NEAR
+
 INCLUDE inout.inc
 
 .DATA
@@ -20,6 +22,7 @@ Main PROC FAR
 	CALL displayWelcomeScreen
 	
 	; Press any key to exit
+	CALL MenuScreen
 	callSwitchToTextMode
 	CALL exitProgram
 	
