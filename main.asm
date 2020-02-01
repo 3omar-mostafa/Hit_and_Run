@@ -2,6 +2,10 @@
 .STACK 2048
 .386 ; sets the instruction set of 80386 processor
 
+; This is an external PROC that is defined in welcome.asm
+; The linker will join them
+EXTRN displayWelcomeScreen:NEAR
+
 .DATA
 
 
@@ -9,6 +13,10 @@
 Main PROC FAR
 
 	CALL initializeDataSegment
+	
+	CALL switchToGraphicsMode
+
+	CALL displayWelcomeScreen
 	
 	; Press any key to exit
 	CALL waitForAnyKey
