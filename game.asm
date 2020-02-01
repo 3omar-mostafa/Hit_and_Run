@@ -7,6 +7,10 @@ INCLUDE inout.inc
 INCLUDE draw.inc
 	BLOCK_WIDTH EQU 16
 	BLOCK_HEIGHT EQU 16
+
+	IMAGE_WIDTH EQU BLOCK_WIDTH
+	IMAGE_HEIGHT EQU BLOCK_HEIGHT
+
 	true EQU 1
 	false EQU 0
 	PLAYER_1_BOMB EQU 1
@@ -14,6 +18,14 @@ INCLUDE draw.inc
 	BOMB_TIME_TO_EXPLODE EQU 2
 	exitFlag DB false
 
+	bomberManFilename DB "images\bomber.img", 0
+	bomberManFileHandle DW ?
+	bomberManData DB IMAGE_WIDTH*IMAGE_HEIGHT dup(?)
+	
+	bombFilename DB "images\bomb.img", 0
+	bombFileHandle DW ?
+	bombData DB IMAGE_WIDTH*IMAGE_HEIGHT dup(?)
+	
 	bomb STRUC
 		bomb_x DW 0
 		bomb_y DW 0
@@ -82,6 +94,8 @@ INCLUDE draw.inc
 .CODE
 
 Game PROC
+	CALL loadImages
+	
 	callSwitchToGraphicsMode
 
 	callOpenFile gridFilename , gridFileHandle
@@ -96,4 +110,18 @@ Game PROC
 Game ENDP
 
 
+; Loads all small (16px * 16px) images into memory to use them
+loadImages PROC
+	; Load bomb
+	callOpenFile bombFilename , bombFileHandle
+	callLoadImageData bombFileHandle , bombData
+	callCloseFile bombFileHandle
+
+	; Load bomber man
+	callOpenFile bomberManFilename , bomberManFileHandle
+	callLoadImageData bomberManFileHandle , bomberManData
+	callCloseFile bomberManFileHandle
+
+	RET
+loadImages ENDP
 END
