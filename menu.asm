@@ -6,6 +6,7 @@
 
 PUBLIC MenuScreen
 
+EXTRN Game:NEAR
 INCLUDE const.inc
 INCLUDE inout.inc
 INCLUDE draw.inc
@@ -51,7 +52,7 @@ MenuScreen PROC
 	JMP _label_start_menu
 	
 	start_game:
-	
+		CALL Game
 	JMP _label_start_menu
 	
 	_label_finish:

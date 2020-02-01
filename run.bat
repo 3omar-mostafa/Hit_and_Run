@@ -11,6 +11,7 @@ if exist draw.obj erase draw.obj
 if exist welcome.obj erase welcome.obj
 if exist inout.obj erase inout.obj
 if exist menu.obj erase menu.obj
+if exist game.obj erase game.obj
 
 if exist game.exe erase game.exe
 
@@ -34,7 +35,11 @@ masm menu.asm /z /Zi /Zd /v > menu.log ,menu ;
 If not exist menu.obj echo Assembling Failed , Check menu.log for errors
 If not exist menu.obj goto end
 
-link main.obj draw.obj welcome.obj inout.obj menu.obj > link.log ,game.exe,nul;
+masm game.asm /z /Zi /Zd /v > game.log ,game ;
+If not exist game.obj echo Assembling Failed , Check game.log for errors
+If not exist game.obj goto end
+
+link main.obj draw.obj welcome.obj inout.obj menu.obj game.obj > link.log ,game.exe,nul;
 If not exist game.exe echo Linking Failed , Check link.log for errors
 If not exist game.exe goto end
 
