@@ -5,6 +5,24 @@
 PUBLIC Game
 INCLUDE inout.inc
 INCLUDE draw.inc
+INCLUDE const.inc
+
+.DATA
+
+	; Player 1 Controls:
+	CONTROLS_PLAYER_1_UP EQU ARROW_UP_SCAN_CODE
+	CONTROLS_PLAYER_1_DOWN EQU ARROW_DOWN_SCAN_CODE
+	CONTROLS_PLAYER_1_LEFT EQU ARROW_LEFT_SCAN_CODE
+	CONTROLS_PLAYER_1_RIGHT EQU ARROW_RIGHT_SCAN_CODE
+	CONTROLS_PLAYER_1_FIRE EQU SPACE_BAR_SCAN_CODE
+
+	; Player 2 Controls:
+	CONTROLS_PLAYER_2_UP EQU LETTER_W_SCAN_CODE
+	CONTROLS_PLAYER_2_DOWN EQU LETTER_S_SCAN_CODE
+	CONTROLS_PLAYER_2_LEFT EQU LETTER_A_SCAN_CODE
+	CONTROLS_PLAYER_2_RIGHT EQU LETTER_D_SCAN_CODE
+	CONTROLS_PLAYER_2_FIRE EQU TAB_BAR_SCAN_CODE
+
 	BLOCK_WIDTH EQU 16
 	BLOCK_HEIGHT EQU 16
 
@@ -108,6 +126,9 @@ Game PROC
 
 	callDrawImage Player2.position_x , Player2.position_y , bomberManData
 	GameLoop:
+		
+		CALL checkAction_Player1
+		CALL checkAction_Player2
 	_label_Game_loop_end:
 	CMP exitFlag , true
 	JNE GameLoop
@@ -115,6 +136,131 @@ Game PROC
 		RET
 Game ENDP
 
+
+checkAction_Player1 PROC
+	PUSHA
+
+	callIsKeyPressed
+	JZ _label_checkAction_P1_finish
+	
+	callGetPressedKey
+
+	CMP AH , CONTROLS_PLAYER_1_UP
+	JE _label_checkAction_P1_up
+
+	CMP AH , CONTROLS_PLAYER_1_DOWN
+	JE _label_checkAction_P1_down
+
+	CMP AH , CONTROLS_PLAYER_1_RIGHT
+	JE _label_checkAction_P1_right
+
+	CMP AH , CONTROLS_PLAYER_1_LEFT
+	JE _label_checkAction_P1_left
+
+	CMP AH , CONTROLS_PLAYER_1_FIRE
+	JE _label_checkAction_P1_put_bomb
+
+	CMP AH, F4_SCAN_CODE
+	JE _label_checkAction_P1_exit
+	JMP _label_checkAction_P1_finish
+
+
+
+	_label_checkAction_P1_up:
+
+	JMP _label_checkAction_P1_finish
+
+
+	_label_checkAction_P1_down:
+
+	JMP _label_checkAction_P1_finish
+
+
+	_label_checkAction_P1_right:
+
+	JMP _label_checkAction_P1_finish
+
+
+	_label_checkAction_P1_left: 
+
+	JMP _label_checkAction_P1_finish
+
+
+	_label_checkAction_P1_put_bomb:
+	
+	JMP _label_checkAction_P1_finish
+	
+
+	_label_checkAction_P1_exit:
+		MOV exitFlag , true
+
+	_label_checkAction_P1_finish:
+	POPA
+	RET
+checkAction_Player1 ENDP
+
+
+
+
+checkAction_Player2 PROC
+	PUSHA
+
+	callIsKeyPressed
+	JZ _label_checkAction_P1_finish
+	
+	callGetPressedKey
+
+	CMP AH , CONTROLS_PLAYER_2_UP
+	JE _label_checkAction_P2_up
+
+	CMP AH , CONTROLS_PLAYER_2_DOWN
+	JE _label_checkAction_P2_down
+
+	CMP AH , CONTROLS_PLAYER_2_RIGHT
+	JE _label_checkAction_P2_right
+
+	CMP AH , CONTROLS_PLAYER_2_LEFT
+	JE _label_checkAction_P2_left
+
+	CMP AH , CONTROLS_PLAYER_2_FIRE
+	JE _label_checkAction_P2_put_bomb
+
+	CMP AH, F4_SCAN_CODE
+	JE _label_checkAction_P2_exit
+	JMP _label_checkAction_P2_finish
+	
+
+
+	_label_checkAction_P2_up:
+
+	JMP _label_checkAction_P2_finish
+
+
+	_label_checkAction_P2_down:
+
+	JMP _label_checkAction_P2_finish
+
+
+	_label_checkAction_P2_right:
+
+	JMP _label_checkAction_P2_finish
+
+
+	_label_checkAction_P2_left:
+
+	JMP _label_checkAction_P2_finish
+
+	_label_checkAction_P2_put_bomb:
+
+	JMP _label_checkAction_P2_finish
+
+	_label_checkAction_P2_exit:
+		MOV exitFlag , true
+	
+	_label_checkAction_P2_finish:
+	POPA           
+	RET
+checkAction_Player2 ENDP
 
 ; Loads all small (16px * 16px) images into memory to use them
 loadImages PROC
