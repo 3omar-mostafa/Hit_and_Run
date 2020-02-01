@@ -94,6 +94,7 @@ INCLUDE draw.inc
 .CODE
 
 Game PROC
+	CALL initializeData
 	CALL loadImages
 	
 	callSwitchToGraphicsMode
@@ -101,6 +102,11 @@ Game PROC
 	callOpenFile gridFilename , gridFileHandle
 	callDrawLargeImage gridFileHandle , 0 , 16 , 320 , 144
 	callCloseFile gridFileHandle
+
+	; Put the players in their places
+	callDrawImage Player1.position_x , Player1.position_y , bomberManData
+
+	callDrawImage Player2.position_x , Player2.position_y , bomberManData
 	GameLoop:
 	_label_Game_loop_end:
 	CMP exitFlag , true
@@ -124,4 +130,27 @@ loadImages PROC
 
 	RET
 loadImages ENDP
+; initialize variables data
+initializeData PROC
+
+	; Player 1 Data
+	MOV Player1.position_x , 288
+	MOV Player1.position_y , 128
+	MOV Player1.respawn_x , 288
+	MOV Player1.respawn_y , 128
+	MOV Player1.score , 0
+	MOV Player1.lives , 3
+
+	; Player 2 Data
+	MOV Player2.position_x , 16
+	MOV Player2.position_y , 32
+	MOV Player2.respawn_x , 16
+	MOV Player2.respawn_y , 32
+	MOV Player2.score , 0
+	MOV Player2.lives , 3
+	MOV exitFlag , false
+
+	RET
+initializeData ENDP
+
 END
