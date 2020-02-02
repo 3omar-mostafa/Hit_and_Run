@@ -5,6 +5,7 @@
 PUBLIC Game
 INCLUDE inout.inc
 INCLUDE draw.inc
+INCLUDE gameUtil.inc
 INCLUDE const.inc
 
 .DATA
@@ -263,6 +264,20 @@ checkAction_Player2 PROC
 	RET
 checkAction_Player2 ENDP
 
+
+
+updateGrid PROC
+
+	; Parameters:
+	; BX -> x
+	; AX -> y
+	; CL -> newData
+
+	CALL getGridElementIndex 
+	MOV DS:grid[DI] , CL
+
+	RET
+updateGrid ENDP
 
 ; finds the index of a block in the grid by its x , y screen coordinates
 ; @Return the index in DI
