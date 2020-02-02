@@ -17,6 +17,8 @@ PUBLIC clearKeyboardBuffer
 PUBLIC isLetter
 PUBLIC readString
 PUBLIC printString
+PUBLIC printChar
+PUBLIC printNumber
 PUBLIC clearCharacters
 PUBLIC switchToTextMode
 PUBLIC switchToGraphicsMode
@@ -170,6 +172,48 @@ printString PROC
 	
 	RET
 printString ENDP
+
+
+; char is printed at the current cursor position
+printChar PROC
+
+	; Parameters :
+	; DL -> character to display
+
+	MOV AH,2
+	INT 21h
+
+	RET
+printChar ENDP
+
+
+; number is printed at the current cursor position
+printNumber PROC 
+	; Parameters:
+	; AX -> Number to be printed
+
+	MOV CX , 0
+	MOV DX , 0
+	MOV BX , 10
+
+	_label_printNumber_start:        
+		DIV BX         ; Divides the input every iteration by 10 to extract one digit from it
+		ADD DL , '0'   ; Adds '0' to convert the digit to its ascii value
+		PUSH DX        ; Push it to the stack because we extract values from right and we want to print it from the left
+		MOV DX , 0     ; resets the DX register in order not to have division overflow (div treats the number as DX:AX)
+		INC CX         ; count the number of digits to POP them from the stack and print
+
+	CMP AX , 0
+	JNE _label_printNumber_start
+
+	_label_printNumber_print:
+		POP DX
+		MOV AH , 2
+		INT 21h
+	LOOP _label_printNumber_print
+
+	RET
+printNumber ENDP
 
 ; Clear number of characters to reprint over them without overlapping
 ; i.e. printing spaces to clear the screen

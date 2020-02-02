@@ -13,6 +13,8 @@ EXTRN clearKeyboardBuffer:NEAR
 EXTRN isLetter:NEAR
 EXTRN readString:NEAR
 EXTRN printString:NEAR
+EXTRN printChar:NEAR
+EXTRN printNumber:NEAR
 EXTRN clearCharacters:NEAR
 EXTRN switchToTextMode:NEAR
 EXTRN switchToGraphicsMode:NEAR
@@ -134,6 +136,32 @@ callPrintString MACRO string
 	POP DX
 	POP AX
 ENDM callPrintString
+
+
+; character is printed at the current cursor position
+callPrintChar MACRO char
+	PUSH AX
+	PUSH DX
+	
+	MOV DL , char
+	
+	CALL printChar
+
+	POP DX
+	POP AX
+ENDM callPrintChar
+
+
+; number is assumed as byte/word variable/register
+; number is printed at the current cursor position
+callPrintNumber MACRO number
+	PUSHA
+	
+	MOVZX EAX , number
+	CALL printNumber
+
+	POPA
+ENDM callPrintNumber
 
 
 ; Clear number of characters to reprint over them without overlapping
