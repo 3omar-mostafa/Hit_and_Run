@@ -263,6 +263,49 @@ checkAction_Player2 PROC
 	RET
 checkAction_Player2 ENDP
 
+
+; finds the index of a block in the grid by its x , y screen coordinates
+; @Return the index in DI
+getGridElementIndex PROC
+	; Parameters:
+	; BX -> X
+	; AX -> Y
+
+	PUSH AX
+	PUSH BX
+	PUSH CX
+
+	; Increment by 1 to convert coordinates from 0-based to 1-based
+	INC AX
+	INC BX
+
+	; Shift Right By 4 = Division by 2^4 = Division by 16
+	; Where 16 is the width/height of each block in the grid
+	; i.e. Convert from Screen Coordinates to 2D grid coordinates
+	MOV CL , 4
+	SHR AX , CL
+	SHR BX , CL
+
+	DEC AX
+	
+	; To convert from 2D array (N columns * M rows) to 1D array
+	; 1D = N*(Row-1) + Column
+
+	MOV CL , GRID_WIDTH
+	MUL CL ; AX = AL * CL -> (Row-1)*N
+	ADD AX , BX ; (Row-1)*N + Column
+
+	; The Result
+	MOV DI , AX
+
+	POP CX
+	POP BX
+	POP AX
+
+	RET
+getGridElementIndex ENDP
+
+
 ; Loads all small (16px * 16px) images into memory to use them
 loadImages PROC
 	; Load bomb
