@@ -7,6 +7,8 @@ PUBLIC Game
 EXTRN NamePlayer1:BYTE
 EXTRN NamePlayer2:BYTE
 
+EXTRN displayResults:NEAR
+
 INCLUDE inout.inc
 INCLUDE draw.inc
 INCLUDE gameUtil.inc
@@ -217,7 +219,7 @@ Game PROC
 			MOV_MEMORY_BYTE last_time , time_seconds
 
 			CMP gameTimer , 0
-			JE _label_exit
+			JE _label_go_to_results
 
 			DEC gameTimer
 			CALL printTime
@@ -247,6 +249,19 @@ Game PROC
 	_label_Game_loop_end:
 	CMP exitFlag , true
 	JNE GameLoop
+
+	_label_go_to_results:
+		CALL updateScoreBar
+		callDelayInSeconds 1
+
+		; displayResults Parameters
+		MOV AL , Player1.lives
+		MOV AH , Player2.lives
+		MOV CX , Player1.score
+		MOV DX , Player2.score
+
+		CALL displayResults
+	
 	_label_exit:
 		restoreGridData
 
