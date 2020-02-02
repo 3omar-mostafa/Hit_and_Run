@@ -16,6 +16,12 @@ EXTRN switchToGraphicsMode:NEAR
 EXTRN openFile:NEAR
 EXTRN loadImageData:NEAR
 EXTRN closeFile:NEAR
+EXTRN getSystemTime:NEAR
+EXTRN delayInSeconds:NEAR
+
+
+EXTRN time_seconds:BYTE
+
 
 callSetCursorPosition MACRO x , y
 	PUSHA
@@ -149,6 +155,24 @@ callCloseFile MACRO fileHandle
 
 	POPA 
 ENDM callCloseFile
+
+callGetSystemTime MACRO
+	PUSHA
+
+	CALL getSystemTime
+
+	POPA
+ENDM callGetSystemTime
+
+callDelayInSeconds MACRO seconds
+	PUSHA
+
+	MOV CH , 0
+	MOV CL , seconds
+	CALL delayInSeconds
+
+	POPA
+ENDM callDelayInSeconds
 
 
 ; Memory Macros 

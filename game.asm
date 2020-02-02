@@ -42,6 +42,9 @@ INCLUDE const.inc
 	LEFT    DW -16 ,  0
 	RIGHT   DW  16 ,  0
 
+	last_time DB ?
+	gameTimer DB 150
+
 	exitFlag DB false
 
 	bomberManFilename DB "images\bomber.img", 0
@@ -140,6 +143,20 @@ Game PROC
 		CALL checkAction_Player1
 		CALL checkAction_Player2
 		callClearKeyboardBuffer
+		
+		callGetSystemTime
+		
+		CMP_MEMORY time_seconds , last_time
+		JE _label_Game_loop_end
+		
+		; One Second have passed
+			
+			MOV_MEMORY_BYTE last_time , time_seconds
+
+			CMP gameTimer , 0
+			JE _label_exit
+
+			DEC gameTimer
 	_label_Game_loop_end:
 	CMP exitFlag , true
 	JNE GameLoop
@@ -375,6 +392,8 @@ initializeData PROC
 	MOV Player2.respawn_y , 32
 	MOV Player2.score , 0
 	MOV Player2.lives , 3
+
+	MOV gameTimer , 150
 	MOV exitFlag , false
 
 	RET

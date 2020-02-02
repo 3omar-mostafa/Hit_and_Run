@@ -20,6 +20,15 @@ PUBLIC switchToGraphicsMode
 PUBLIC openFile
 PUBLIC loadImageData
 PUBLIC closeFile
+PUBLIC getSystemTime
+PUBLIC delayInSeconds
+
+PUBLIC time_seconds
+
+.DATA
+
+	time_seconds DB ?
+
 .CODE
 
 setCursorPosition PROC
@@ -162,5 +171,47 @@ closeFile PROC
 	RET
 closeFile ENDP
 
+
+getSystemTime PROC
+	; get system time (returns CH -> hour , CL -> minute -> DH = second)
+	MOV AH , 2Ch
+	INT 21h
+	
+	MOV time_seconds , DH
+	
+	RET
+getSystemTime ENDP
+
+
+delayOneSecond PROC
+	PUSHA
+
+	CALL getSystemTime
+	MOV AL , time_seconds
+
+	_label_delayOneSecond_delay:
+		CALL getSystemTime
+		CMP AL , time_seconds
+	JE _label_delayOneSecond_delay
+	
+	POPA
+	RET
+delayOneSecond ENDP
+
+
+delayInSeconds PROC
+
+	; Parameters:
+	; CX -> _label_delayOneSecond_delay
+
+	MOV AH , time_seconds
+
+	_label_delayInSeconds_delay:
+		CALL delayOneSecond
+	LOOP _label_delayInSeconds_delay
+
+	MOV time_seconds , AH
+	RET
+delayInSeconds ENDP
 
 END
