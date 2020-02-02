@@ -12,6 +12,7 @@ EXTRN drawRowRight:NEAR
 
 EXTRN drawLargeImage:NEAR
 EXTRN drawImage:NEAR
+EXTRN clearBlock:NEAR
 
 
 ; Draw Vertical Line from top to bottom with small speed to show effect of drawing
@@ -159,3 +160,14 @@ callDrawImage MACRO x1 , y1 , imageData
 	POPA
 ENDM callDrawImage
 
+
+callClearBlock MACRO x1 , y1
+	PUSHA
+
+	MOV CX , x1
+	MOV DX , y1
+
+	CALL clearBlock
+	
+	POPA
+ENDM callClearBlock

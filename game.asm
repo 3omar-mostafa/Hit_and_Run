@@ -35,6 +35,13 @@ INCLUDE const.inc
 	PLAYER_1_BOMB EQU 1
 	PLAYER_2_BOMB EQU 2
 	BOMB_TIME_TO_EXPLODE EQU 2
+
+	;Movement   dx , dy
+	UP      DW  0  , -16
+	DOWN    DW  0  ,  16
+	LEFT    DW -16 ,  0
+	RIGHT   DW  16 ,  0
+
 	exitFlag DB false
 
 	bomberManFilename DB "images\bomber.img", 0
@@ -123,8 +130,10 @@ Game PROC
 	callCloseFile gridFileHandle
 
 	; Put the players in their places
+	callUpdateGrid Player1.position_x , Player1.position_y , P1
 	callDrawImage Player1.position_x , Player1.position_y , bomberManData
 
+	callUpdateGrid Player2.position_x , Player2.position_y , P2
 	callDrawImage Player2.position_x , Player2.position_y , bomberManData
 	GameLoop:
 		
@@ -145,8 +154,6 @@ checkAction_Player1 PROC
 	callIsKeyPressed
 	JZ _label_checkAction_P1_finish
 	
-	callGetPressedKey
-
 	CMP AH , CONTROLS_PLAYER_1_UP
 	JE _label_checkAction_P1_up
 
@@ -170,21 +177,29 @@ checkAction_Player1 PROC
 
 	_label_checkAction_P1_up:
 
+		callMoveIfAvailable_Player1 UP
+		
 	JMP _label_checkAction_P1_finish
 
 
 	_label_checkAction_P1_down:
+
+		callMoveIfAvailable_Player1 DOWN
 
 	JMP _label_checkAction_P1_finish
 
 
 	_label_checkAction_P1_right:
 
+		callMoveIfAvailable_Player1 RIGHT
+
 	JMP _label_checkAction_P1_finish
 
 
 	_label_checkAction_P1_left: 
 
+		callMoveIfAvailable_Player1 LEFT
+		
 	JMP _label_checkAction_P1_finish
 
 
@@ -210,7 +225,6 @@ checkAction_Player2 PROC
 	callIsKeyPressed
 	JZ _label_checkAction_P1_finish
 	
-	callGetPressedKey
 
 	CMP AH , CONTROLS_PLAYER_2_UP
 	JE _label_checkAction_P2_up
@@ -235,21 +249,29 @@ checkAction_Player2 PROC
 
 	_label_checkAction_P2_up:
 
+		callMoveIfAvailable_Player2 UP
+
 	JMP _label_checkAction_P2_finish
 
 
 	_label_checkAction_P2_down:
+
+		callMoveIfAvailable_Player2 DOWN
 
 	JMP _label_checkAction_P2_finish
 
 
 	_label_checkAction_P2_right:
 
+		callMoveIfAvailable_Player2 RIGHT
+	
 	JMP _label_checkAction_P2_finish
 
 
 	_label_checkAction_P2_left:
 
+		callMoveIfAvailable_Player2 LEFT
+	
 	JMP _label_checkAction_P2_finish
 
 	_label_checkAction_P2_put_bomb:
@@ -357,5 +379,67 @@ initializeData PROC
 
 	RET
 initializeData ENDP
+
+
+moveIfAvailable_Player1 PROC
+
+	; Parameters:
+	; BP -> direction
+
+	callGetPressedKey ; Remove the pressed key from keyboard buffer
+
+	MOV BX , Player1.position_x
+	MOV AX , Player1.position_y
+	
+	ADD BX , DS:[BP][0] ; x = x + deltaX (direction in x)
+	ADD AX , DS:[BP][2] ; y = y + deltaY (direction in y)
+
+	CALL getGridElementIndex
+	MOV DL , DS:grid[DI]
+	SHL DL , 1 ;shift to check if it's an unmovable place ( block or brick )
+	JC _label_moveIfAvailable_P1_not_move
+
+	_label_moveIfAvailable_P1_move:
+		callClearBlock Player1.position_x , Player1.position_y
+		MOV Player1.position_x , BX
+		MOV Player1.position_y , AX
+
+		callDrawImage Player1.position_x , Player1.position_y , bomberManData
+		callUpdateGrid Player1.position_x , Player1.position_y , P1
+
+	_label_moveIfAvailable_P1_not_move:
+	RET
+moveIfAvailable_Player1 ENDP
+
+
+moveIfAvailable_Player2 PROC
+
+	; Parameters:
+	; BP -> direction
+
+	callGetPressedKey ; Remove the pressed key from keyboard buffer
+
+	MOV BX , Player2.position_x
+	MOV AX , Player2.position_y
+	
+	ADD BX , DS:[BP][0] ; x = x + deltaX (direction in x)
+	ADD AX , DS:[BP][2] ; y = y + deltaY (direction in y)
+
+	CALL getGridElementIndex
+	MOV DL , DS:grid[DI]
+	SHL DL , 1 ;shift to check if it's an unmovable place ( block or brick )
+	JC _label_moveIfAvailable_P2_not_move
+	
+	_label_moveIfAvailable_P2_move:
+		callClearBlock Player2.position_x , Player2.position_y
+		MOV Player2.position_x , BX
+		MOV Player2.position_y , AX
+
+		callDrawImage Player2.position_x , Player2.position_y , bomberManData
+		callUpdateGrid Player2.position_x , Player2.position_y , P2
+
+	_label_moveIfAvailable_P2_not_move:
+	RET
+moveIfAvailable_Player2 ENDP
 
 END

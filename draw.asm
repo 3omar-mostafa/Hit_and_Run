@@ -17,6 +17,7 @@ PUBLIC drawRowLeft
 PUBLIC drawRowRight
 PUBLIC drawLargeImage
 PUBLIC drawImage
+PUBLIC clearBlock
 
 PUBLIC letterDrawingSpeed
 
@@ -275,5 +276,38 @@ drawImage PROC
 
 	RET
 drawImage ENDP
+
+
+clearBlock PROC
+
+	; Parameters:
+	; CX -> x1
+	; DX -> y1
+
+	MOV BP , CX ; BP = x1
+	MOV SI , CX ; SI = x1
+	ADD SI , 16 ; SI = x2 = x1 + 16
+	MOV DI , DX ; DI = y1
+	ADD DI , 16 ; DI = y2 = y2 + 16
+	MOV BH , 0  ; BH contains the page number to draw in 
+
+	MOV AH , 0Ch ; Draw pixel mode of int 10h
+	MOV AL , COLOR_BACKGROUND
+	; Drawing loop
+	_label_clearBlock_drawLoop:
+			INT 10h ; Draw the  pixel
+			INC CX ; x++
+			CMP CX , SI ; checks if x < x2
+		JNE _label_clearBlock_drawLoop 
+		
+		MOV CX , BP ; CX = x1 
+		INC DX  ; y++ (move to next row)
+		CMP DX , DI ; checks if y < y2
+	JNE _label_clearBlock_drawLoop
+
+	RET
+clearBlock ENDP
+
+
 
 END
