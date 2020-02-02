@@ -22,8 +22,7 @@ INCLUDE inout.inc
 
 	errorMessage DB "Please start your name with a letter",'$'
 	enterMessage DB "Please enter your name (Max of 6 Characters)",'$'
-	player1Message DB "Player 1 Name : " , '$'
-	player2Message DB "Player 2 Name : " , '$'
+	player1Message DB "Player Name : " , '$'
 
 
 .CODE
@@ -39,7 +38,6 @@ Main PROC FAR
 	callPrintString enterMessage
 
 	CALL readPlayer1Name
-	CALL readPlayer2Name
 
 	CALL MenuScreen
 	
@@ -69,12 +67,12 @@ exitProgram ENDP
 readPlayer1Name PROC
 	PUSHA
 
-	callSetCursorPosition 50 , 10
+	callSetCursorPosition 33 , 10
 	callPrintString player1Message
 
-	_label_Player1_verify_name_loop:
+	_label_readPlayer1Name_loop:
 
-		callSetCursorPosition 53 , 12
+		callSetCursorPosition 36 , 12
 		callClearCharacters NamePlayer2_length
 
 		callReadString NamePlayer1
@@ -82,42 +80,15 @@ readPlayer1Name PROC
 		callIsLetter NamePlayer1[0]
 		JC _label_readPlayer1Name_finish
 
-		callSetCursorPosition 22 , 20
+		callSetCursorPosition 22 , 15
 		callPrintString errorMessage
 
-	JMP _label_Player1_verify_name_loop
+	JMP _label_readPlayer1Name_loop
 	
 	_label_readPlayer1Name_finish:  
 	POPA
 	RET
 readPlayer1Name ENDP
-
-
-readPlayer2Name PROC
-	PUSHA
-
-	callSetCursorPosition 10 , 10
-	callPrintString player2Message
-
-	_label_Player2_verify_name_loop:
-
-		callSetCursorPosition 13 , 12
-		callClearCharacters NamePlayer2_length
-
-		callReadString NamePlayer2
-
-		callIsLetter NamePlayer2[0]
-		JC _label_readPlayer2Name_finish
-
-		callSetCursorPosition 22 , 20
-		callPrintString errorMessage
-
-	JMP _label_Player2_verify_name_loop
-	
-	_label_readPlayer2Name_finish:  
-	POPA
-	RET
-readPlayer2Name ENDP
 
 
 END Main
