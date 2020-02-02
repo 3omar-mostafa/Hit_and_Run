@@ -125,7 +125,14 @@ INCLUDE const.inc
 .CODE
 
 Game PROC
-	CALL initializeData
+
+	backupGridData  ; Grid content is spoiled after the game
+	                ; Therefore changes that players made will remain in the next game
+	                ; We backup the grid and restore it when the game finish
+
+
+	CALL initializeData ; Same as grid we initialize data because it was spoiled
+
 	CALL loadImages
 	
 	callSwitchToGraphicsMode
@@ -184,6 +191,8 @@ Game PROC
 	CMP exitFlag , true
 	JNE GameLoop
 	_label_exit:
+		restoreGridData
+
 		RET
 Game ENDP
 

@@ -1,4 +1,35 @@
 
+
+backupGridData MACRO
+	MOV BX , 0
+	
+	_label_backupGridData_loop:
+
+		MOVZX AX , DS:[grid][BX]
+		PUSH AX
+		INC BX
+	
+	CMP BX , GRID_WIDTH * GRID_HEIGHT
+	JNE _label_backupGridData_loop
+
+ENDM backupGridData
+
+
+restoreGridData MACRO
+
+	MOV BX , GRID_WIDTH * GRID_HEIGHT -1
+	_label_restoreGridData_loop:
+
+		POP AX
+		MOV DS:[grid][BX] , AL
+		DEC BX
+	
+	CMP BX , -1
+	JNE _label_restoreGridData_loop
+
+ENDM restoreGridData
+
+
 callUpdateGrid MACRO x1 , y1 , newData
 	PUSHA
 
