@@ -7,9 +7,23 @@
 PUBLIC MenuScreen
 
 EXTRN Game:NEAR
+EXTRN Chat:NEAR
+; Chat Windows variables
+EXTRN windowOneStartX:BYTE
+EXTRN windowOneEndX:BYTE
+EXTRN windowOneStartY:BYTE
+EXTRN windowOneEndY:BYTE
+EXTRN WindowOneColor:BYTE
+EXTRN windowTwoStartX:BYTE
+EXTRN windowTwoEndX:BYTE
+EXTRN windowTwoStartY:BYTE
+EXTRN windowTwoEndY:BYTE
+EXTRN WindowTwoColor:BYTE
+
 INCLUDE const.inc
 INCLUDE inout.inc
 INCLUDE draw.inc
+INCLUDE serial.inc
 
 .DATA
 
@@ -24,6 +38,8 @@ INCLUDE draw.inc
 
 MenuScreen PROC
 
+	callInitializeUART
+	
 	callOpenFile menuFilename , menuFileHandle
 	
 	_label_start_menu:
@@ -48,7 +64,8 @@ MenuScreen PROC
 		
 		
 	start_chatting:
-
+		CALL prepareChat
+		CALL Chat
 	JMP _label_start_menu
 	
 	start_game:
@@ -59,5 +76,25 @@ MenuScreen PROC
 	callCloseFile menuFileHandle
 	RET
 MenuScreen ENDP
+
+
+prepareChat PROC
+
+	callSwitchToTextMode
+
+	MOV windowOneStartX , 0
+	MOV windowOneEndX , 79
+	MOV windowOneStartY , 0
+	MOV windowOneEndY , 12
+	MOV WindowOneColor , 1FH
+
+	MOV windowTwoStartX , 0
+	MOV windowTwoEndX , 79
+	MOV windowTwoStartY , 13
+	MOV windowTwoEndY , 24
+	MOV WindowTwoColor , 4FH
+
+	RET
+prepareChat ENDP
 
 END
