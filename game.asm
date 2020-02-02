@@ -32,6 +32,8 @@ INCLUDE const.inc
 
 	true EQU 1
 	false EQU 0
+	DYING_PENALTY_SCORE EQU 200
+
 	PLAYER_1_BOMB EQU 1
 	PLAYER_2_BOMB EQU 2
 	BOMB_TIME_TO_EXPLODE EQU 2
@@ -160,6 +162,24 @@ Game PROC
 
 			INC bomb1.counter
 			INC bomb2.counter
+			
+			CMP bomb1.counter , BOMB_TIME_TO_EXPLODE
+			JE _label_explode_bomb1 
+			
+			CMP bomb2.counter , BOMB_TIME_TO_EXPLODE
+			JE _label_explode_bomb2 
+			
+
+		JMP _label_Game_loop_end
+		
+		_label_explode_bomb1:
+			callExplodeBomb bomb1 , PLAYER_1_BOMB
+			
+		JMP _label_Game_loop_end
+
+		_label_explode_bomb2:
+			callExplodeBomb bomb2 , PLAYER_2_BOMB
+
 	_label_Game_loop_end:
 	CMP exitFlag , true
 	JNE GameLoop
@@ -312,6 +332,38 @@ checkAction_Player2 ENDP
 
 
 
+explodeBlock PROC
+
+	; Parameters:
+	; BX -> X
+	; AX -> Y
+	; DL -> whoseBomb
+
+	; return block position in grid array in DI
+	CALL getGridElementIndex
+
+	MOV CL , DS:grid[DI]
+
+	CMP CL , X
+	JE _label_explodeBlock_finish
+
+	; Remove the LSB (Least Significant Bit) and MSB (Most Significant Bit)
+	; This explodes the brick because the brick's value is 10000001
+	; Since we were OR-ing the brick with the powerups to indicate that there is a powerup under the brick
+	; Therefore by removing LSB and MSB it returns to its initial condition (ex: C_B -> C )
+	AND CL , NOT B ; NOT B = 01111110
+
+	; Update the grid with the new block CL
+	MOV DS:grid[DI] , CL
+
+	CALL drawBlockAfterExplosion
+
+	_label_explodeBlock_finish:
+	RET
+explodeBlock ENDP
+
+
+
 updateGrid PROC
 
 	; Parameters:
@@ -324,6 +376,42 @@ updateGrid PROC
 
 	RET
 updateGrid ENDP
+
+
+drawBlockAfterExplosion PROC
+
+	; Parameters:
+	; BX -> X
+	; AX -> Y
+	; CL -> BlockType (ground , coin ... )
+	; DL -> whoseBomb
+
+	CMP CL , G  
+	JE _label_drawBlock_Ground
+	
+	CMP CL , P1
+	JE _label_drawBlock_Player1
+	
+	CMP CL , P2
+	JE _label_drawBlock_Player2
+
+	RET
+
+	_label_drawBlock_Ground:
+		callClearBlock BX , AX
+	RET
+	
+	_label_drawBlock_Player1:
+		CALL Player1Died
+	RET
+	
+	_label_drawBlock_Player2:
+		CALL Player2Died
+	RET
+	
+drawBlockAfterExplosion ENDP
+
+
 
 ; finds the index of a block in the grid by its x , y screen coordinates
 ; @Return the index in DI
@@ -381,6 +469,115 @@ loadImages PROC
 
 	RET
 loadImages ENDP
+
+Player1Died PROC
+
+	; Parameters :
+	; DL -> whoseBomb
+
+	DEC Player1.lives
+	CMP Player1.lives , 0
+	JNE _label_P1_Died_still_have_lives
+
+		MOV exitFlag , true
+		JMP _label_P1_Died_finish
+
+	_label_P1_Died_still_have_lives:
+
+		callClearBlock Player1.position_x , Player1.position_y
+		callUpdateGrid Player1.position_x , Player1.position_y , G
+		
+		MOV_MEMORY_WORD Player1.position_x , Player1.respawn_x
+		MOV_MEMORY_WORD Player1.position_y , Player1.respawn_y
+		
+		callUpdateGrid Player1.position_x , Player1.position_y , P1
+		callDrawImage Player1.position_x , Player1.position_y , bomberManData
+
+		CMP DL , PLAYER_2_BOMB
+		JE _label_P1_Died_increase_P2_score
+
+		CALL decreaseScore_Player1
+		JMP _label_P1_Died_finish
+
+		_label_P1_Died_increase_P2_score:
+			ADD Player2.score , DYING_PENALTY_SCORE
+		
+
+	_label_P1_Died_finish:
+	RET
+
+Player1Died ENDP
+
+
+
+Player2Died PROC
+
+	; Parameters :
+	; DL -> whoseBomb
+
+	DEC Player2.lives
+	CMP Player2.lives , 0
+	JNE _label_P2_Died_still_have_lives
+
+		MOV exitFlag , true
+		JMP _label_P2_Died_finish
+
+	_label_P2_Died_still_have_lives:
+
+		callClearBlock Player2.position_x , Player2.position_y
+		callUpdateGrid Player2.position_x , Player2.position_y , G
+		
+		MOV_MEMORY_WORD Player2.position_x , Player2.respawn_x
+		MOV_MEMORY_WORD Player2.position_y , Player2.respawn_y
+		
+		callUpdateGrid Player2.position_x , Player2.position_y , P2
+		callDrawImage Player2.position_x , Player2.position_y , bomberManData
+
+		CMP DL , PLAYER_1_BOMB
+		JE _label_P2_Died_increase_P1_score
+
+		CALL decreaseScore_Player2
+		JMP _label_P2_Died_finish
+
+		_label_P2_Died_increase_P1_score:
+			ADD Player1.score , DYING_PENALTY_SCORE
+
+	_label_P2_Died_finish:
+	RET
+
+Player2Died ENDP
+
+
+decreaseScore_Player1 PROC
+
+	CMP Player1.score , DYING_PENALTY_SCORE
+	JB _label_decreaseScore_P1_zero_score
+	SUB Player1.score , DYING_PENALTY_SCORE
+
+	RET
+
+	_label_decreaseScore_P1_zero_score:
+		MOV Player1.score , 0
+
+	RET
+decreaseScore_Player1 ENDP
+
+
+decreaseScore_Player2 PROC
+
+	CMP Player2.score , DYING_PENALTY_SCORE
+	JB _label_decreaseScore_P2_zero_score
+	SUB Player2.score , DYING_PENALTY_SCORE
+
+	RET
+
+	_label_decreaseScore_P2_zero_score:
+		MOV Player2.score , 0
+
+	RET
+decreaseScore_Player2 ENDP
+
+
 ; initialize variables data
 initializeData PROC
 
@@ -406,6 +603,52 @@ initializeData PROC
 	RET
 initializeData ENDP
 
+
+
+; Legend:
+; 0 -> Bomb 
+; B -> bomb_x , bomb_y
+; x -> start_x , start_y of surrounding blocks
+; 0 , 1 , 2 , 3 , 4 are blocks which explode
+;
+;         x------
+;         |     |
+;         |  4  |
+;   x-----B-----x------
+;   |  2  |  0  |  1  |
+;   ------x-----+------
+;         |  3  |
+;         |     |
+;         -------
+;
+explodeBomb PROC
+
+	; Parameters:
+	; BX -> bomb_x
+	; AX -> bomb_y
+	; DL -> whoseBomb
+
+	; The player put a bomb but did not move
+	callExplodeBlock DL ; Bomb's place (block 0)
+
+	ADD BX , BLOCK_WIDTH
+	callExplodeBlock DL ; Right (block 1)
+	SUB BX , BLOCK_WIDTH*2
+	callExplodeBlock DL ; Left (block 2)
+	
+	ADD BX , BLOCK_WIDTH ; return to original position
+
+	ADD AX , BLOCK_HEIGHT
+	callExplodeBlock DL ; Down (block 3)
+	SUB AX , BLOCK_HEIGHT*2
+	callExplodeBlock DL ; Up (block 4)
+
+	ADD AX , BLOCK_HEIGHT ; return to original position
+
+	callUpdateGrid BX , AX , G
+	callClearBlock BX , AX
+	RET
+explodeBomb ENDP
 
 moveIfAvailable_Player1 PROC
 
