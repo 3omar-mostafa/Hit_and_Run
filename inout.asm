@@ -14,7 +14,10 @@ PUBLIC getCursorPosition
 PUBLIC isKeyPressed
 PUBLIC getPressedKey
 PUBLIC clearKeyboardBuffer
+PUBLIC isLetter
+PUBLIC readString
 PUBLIC printString
+PUBLIC clearCharacters
 PUBLIC switchToTextMode
 PUBLIC switchToGraphicsMode
 PUBLIC openFile
@@ -92,6 +95,70 @@ clearKeyboardBuffer PROC
 clearKeyboardBuffer ENDP
 
 
+; @Return result in carry flag
+; Carry = 1 -> true , Carry = 0 -> false
+; JC -> true , JNC -> false
+isLetter PROC
+
+	; Parameters:
+	; AL -> Character
+
+	_label_isLetter_check_Capital_A:
+		CMP AL , "A"
+		JAE _label_isLetter_check_Capital_Z
+		JMP _label_isLetter_check_small_a
+
+	_label_isLetter_check_Capital_Z:   
+		CMP AL , "Z"
+		JBE _label_isLetter_true
+
+
+	_label_isLetter_check_small_a:
+		CMP AL , "a" 
+		JAE _label_isLetter_check_small_z
+		JMP _label_isLetter_false
+	
+	_label_isLetter_check_small_z:
+		CMP AL , "z"
+		JBE _label_isLetter_true
+		JMP _label_isLetter_false
+
+	_label_isLetter_true:
+		STC
+	JMP _label_isLetter_finish
+
+	_label_isLetter_false:
+		CLC
+
+	_label_isLetter_finish:
+	RET
+isLetter ENDP
+
+
+; inputBuffer should have 2 bytes before it determining the size of buffer
+; inputBuffer offsets:
+; DX-2 -> max bytes to read including Enter
+; DX-1 -> @return the actual number of characters read
+; DX   -> the input string
+; returned string is saved at memory location of DX
+readString PROC
+
+	; Parameters :
+	; DX -> inputBuffer to save input in
+
+	MOV AH , 0Ah
+	INT 21h
+
+	; Add '$' terminator at the end of the string
+	MOV BX , DX
+	INC BX
+	MOVZX SI , BYTE PTR DS:[BX] ; [BX] contains the actual number of read characters
+	MOV BYTE PTR [BX][SI]+1 , '$' ; put in the last character '$' terminator
+	
+	RET
+readString ENDP
+
+
 ; string is printed at the current cursor position
 printString PROC
 
@@ -103,6 +170,24 @@ printString PROC
 	
 	RET
 printString ENDP
+
+; Clear number of characters to reprint over them without overlapping
+; i.e. printing spaces to clear the screen
+; Note: it does not change the cursor position
+clearCharacters PROC
+
+	; Parameters:
+	; CX -> numberOfCharactersToClear
+
+	MOV AH , 0Ah
+	MOV AL , " " ; character to display
+	MOV BH , 0 ; page number
+	MOV BL , 0Fh ; color (white text on black background)
+	INT 10h
+
+	RET
+clearCharacters ENDP
+
 
 switchToTextMode PROC
 

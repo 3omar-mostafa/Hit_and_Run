@@ -10,7 +10,10 @@ EXTRN getCursorPosition:NEAR
 EXTRN getPressedKey:NEAR
 EXTRN isKeyPressed:NEAR
 EXTRN clearKeyboardBuffer:NEAR
+EXTRN isLetter:NEAR
+EXTRN readString:NEAR
 EXTRN printString:NEAR
+EXTRN clearCharacters:NEAR
 EXTRN switchToTextMode:NEAR
 EXTRN switchToGraphicsMode:NEAR
 EXTRN openFile:NEAR
@@ -85,6 +88,39 @@ callClearKeyboardBuffer MACRO
 	POP AX
 ENDM callClearKeyboardBuffer
 
+
+; @Return result in carry flag
+; Carry = 1 -> true , Carry = 0 -> false
+; JC -> true , JNC -> false
+callIsLetter MACRO letter
+	PUSH AX
+
+	MOV AL , letter
+	CALL isLetter
+
+	POP AX
+ENDM callIsLetter
+
+
+; inputBuffer should have 2 bytes before it determining the size of buffer
+; inputBuffer offsets:
+; inputBuffer-2 -> max bytes to read including Enter
+; inputBuffer-1 -> @return the actual number of characters read
+; inputBuffer   -> the input string
+; returned string is saved at memory location of inputBuffer
+callReadString MACRO inputBuffer
+	PUSHA
+	
+	LEA DX , inputBuffer
+	SUB DX , 2
+	
+	CALL readString
+
+	POPA
+ENDM callReadString
+
+
+
 ; string must be a memory location terminated with '$'
 ; string is printed at the current cursor position
 callPrintString MACRO string
@@ -98,6 +134,21 @@ callPrintString MACRO string
 	POP DX
 	POP AX
 ENDM callPrintString
+
+
+; Clear number of characters to reprint over them without overlapping
+; i.e. printing spaces to clear the screen
+; Note: it does not change the cursor position
+callClearCharacters MACRO numberOfChars
+	PUSHA
+
+	MOV CH , 0
+	MOV CL , numberOfChars
+	CALL clearCharacters
+
+	POPA
+ENDM callClearCharacters
+
 
 callSwitchToTextMode MACRO
 	PUSH AX
