@@ -63,6 +63,10 @@ INCLUDE const.inc
 	coinFileHandle DW ?
 	coinData DB IMAGE_WIDTH*IMAGE_HEIGHT dup(?)
 	
+	HPFilename DB "images\healthUp.img", 0
+	HPFileHandle DW ?
+	HPData DB IMAGE_WIDTH*IMAGE_HEIGHT dup(?)
+
 	bomb STRUC
 		bomb_x DW 0
 		bomb_y DW 0
@@ -107,7 +111,9 @@ INCLUDE const.inc
 	P2_B2 EQU B2 OR P2 ; Player2 put a bomb but did not move (player and bomb on the same block)
 
 	C EQU 00000010b ; 2 -> Coin powerup
+	H EQU 00000100b ; 4 -> Health powerup
 	C_B EQU C OR B ; Coin powerup under the breakable block
+	H_B EQU H OR B ; Health powerup under the breakable block
 	GRID_WIDTH EQU 20
 	GRID_HEIGHT EQU 9
 
@@ -123,11 +129,11 @@ INCLUDE const.inc
 	grid DB  X  ,  X  ,  X  ,  X  ,  X  ,  X  ,  X  ,  X  ,  X  ,  X  ,  X  ,  X  ,  X  ,  X  ,  X  ,  X  ,  X  ,  X  ,  X  ,  X ; 0
 	     DB  X  ,  G  ,  G  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  X ; 1
 	     DB  X  ,  G  ,  X  , C_B ,  X  ,  G  ,  X  ,  B  ,  X  ,  G  ,  G  ,  X  ,  B  ,  X  ,  G  ,  X  ,  B  ,  X  ,  G  ,  X ; 2
-	     DB  X  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  , C_B ,  B  ,  B  ,  B  , C_B ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  X ; 3
+	     DB  X  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  , C_B ,  B  , H_B ,  B  , C_B ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  X ; 3
 	     DB  X  ,  G  ,  X  ,  B  ,  X  ,  G  ,  X  ,  B  ,  X  ,  G  ,  G  ,  X  ,  B  ,  X  ,  G  ,  X  ,  B  ,  X  ,  G  ,  X ; 4
-	     DB  X  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  X ; 5
+	     DB  X  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  , H_B ,  B  ,  B  ,  B  ,  B  ,  B  ,  X ; 5
 	     DB  X  ,  G  ,  X  ,  B  ,  X  ,  G  ,  X  ,  B  ,  X  ,  G  ,  G  ,  X  ,  B  ,  X  ,  G  ,  X  , C_B ,  X  ,  G  ,  X ; 6
-	     DB  X  ,  B  ,  B  ,  B  ,  B  ,  B  , C_B ,  B  ,  B  , C_B ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  G  ,  G  ,  X ; 7
+	     DB  X  ,  B  ,  B  , H_B ,  B  ,  B  , C_B ,  B  ,  B  , C_B ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  G  ,  G  ,  X ; 7
 	     DB  X  ,  X  ,  X  ,  X  ,  X  ,  X  ,  X  ,  X  ,  X  ,  X  ,  X  ,  X  ,  X  ,  X  ,  X  ,  X  ,  X  ,  X  ,  X  ,  X ; 8
  
 
@@ -409,6 +415,9 @@ drawBlockAfterExplosion PROC
 	
 	CMP CL , C  
 	JE _label_drawBlock_Coin
+	
+	CMP CL , H  
+	JE _label_drawBlock_Heart
 
 	CMP CL , P1
 	JE _label_drawBlock_Player1
@@ -426,6 +435,10 @@ drawBlockAfterExplosion PROC
 		callDrawImage BX , AX , coinData
 	RET
 	
+	_label_drawBlock_Heart:
+		callDrawImage BX , AX , HPData
+	RET
+
 	_label_drawBlock_Player1:
 		CALL Player1Died
 	RET
@@ -496,6 +509,11 @@ loadImages PROC
 	callOpenFile coinFilename , coinFileHandle
 	callLoadImageData coinFileHandle , coinData
 	callCloseFile coinFileHandle
+	
+	; Load heart powerup
+	callOpenFile HPFilename , HPFileHandle
+	callLoadImageData HPFileHandle , HPData
+	callCloseFile HPFileHandle
 	
 	RET
 loadImages ENDP
@@ -690,10 +708,17 @@ takePowerupIfAny_Player1 PROC
 	CMP CL , C
 	JE _label_increment_score1_P1
 
+	CMP CL , H
+	JE _label_increment_lives_P1
+
 	RET
 
 	_label_increment_score1_P1:
 		ADD Player1.score , COIN_SCORE
+	RET
+
+	_label_increment_lives_P1:
+		INC Player1.lives
 	RET
 takePowerupIfAny_Player1 ENDP
 
@@ -772,10 +797,17 @@ takePowerupIfAny_Player2 PROC
 
 	CMP CL , C
 	JE _label_increment_score2_P2
+
+	CMP CL , H
+	JE _label_increment_lives_P2
 	RET
 
 	_label_increment_score2_P2:
 		ADD Player2.score , COIN_SCORE
+	RET
+
+	_label_increment_lives_P2:
+		INC Player2.lives
 	RET
 takePowerupIfAny_Player2 ENDP
 
