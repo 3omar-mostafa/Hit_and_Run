@@ -12,6 +12,7 @@ EXTRN displayResults:NEAR
 INCLUDE inout.inc
 INCLUDE draw.inc
 INCLUDE gameUtil.inc
+INCLUDE serial.inc
 INCLUDE const.inc
 
 .DATA
@@ -49,6 +50,24 @@ INCLUDE const.inc
 	BOMB_LEVEL_2 EQU 2
 
 	BOMB_TIME_TO_EXPLODE EQU 2
+
+	; Game Connection Menu Messages
+	sendInvitationMessage DB "Press F1 to send Invitation" , '$'
+	receiveInvitationMessage DB "Press F2 to receive Invitation" , '$'
+	returnToPreviousMenu DB "Press F3 to return to previous menu" , '$'
+	validInputMessage DB "Please enter a valid value" , '$'
+	playerWantsToConnectMessage DB " invites you to play" , '$'
+	acceptInvitationMessage DB 	"Press F1 to accept" , '$'
+	rejectInvitationMessage DB "Press F2 to reject" , '$'
+	waitingForResponse DB "Waiting for other player's response . . ." , '$'
+	rejectionMessage DB "Sorry the other player does not want to play right now" , '$'
+
+	; any arbitrary values
+	SEND_INVITATION EQU 5
+	ACKNOWLEDGMENT EQU 6
+	ACCEPT_INVITATION EQU 7
+	REJECT_INVITATION EQU 8
+
 
 	;Movement   dx , dy
 	UP      DW  0  , -16
@@ -170,6 +189,8 @@ INCLUDE const.inc
 
 Game PROC
 
+	callSwitchToTextMode
+
 	backupGridData  ; Grid content is spoiled after the game
 	                ; Therefore changes that players made will remain in the next game
 	                ; We backup the grid and restore it when the game finish
@@ -178,6 +199,11 @@ Game PROC
 	CALL initializeData ; Same as grid we initialize data because it was spoiled
 
 	CALL loadImages
+	
+	CALL startConnection
+
+	CMP exitFlag , true
+	JE _label_exit
 	
 	callSwitchToGraphicsMode
 
@@ -275,6 +301,8 @@ checkAction_Player1 PROC
 	callIsKeyPressed
 	JZ _label_checkAction_P1_finish
 	
+	callGetPressedKey
+
 	CMP AH , CONTROLS_PLAYER_1_UP
 	JE _label_checkAction_P1_up
 
@@ -298,6 +326,7 @@ checkAction_Player1 PROC
 
 	_label_checkAction_P1_up:
 
+		callSendByte CONTROLS_PLAYER_2_UP
 		callMoveIfAvailable_Player1 UP
 		
 	JMP _label_checkAction_P1_finish
@@ -305,6 +334,7 @@ checkAction_Player1 PROC
 
 	_label_checkAction_P1_down:
 
+		callSendByte CONTROLS_PLAYER_2_DOWN
 		callMoveIfAvailable_Player1 DOWN
 
 	JMP _label_checkAction_P1_finish
@@ -312,6 +342,7 @@ checkAction_Player1 PROC
 
 	_label_checkAction_P1_right:
 
+		callSendByte CONTROLS_PLAYER_2_RIGHT
 		callMoveIfAvailable_Player1 RIGHT
 
 	JMP _label_checkAction_P1_finish
@@ -319,6 +350,7 @@ checkAction_Player1 PROC
 
 	_label_checkAction_P1_left: 
 
+		callSendByte CONTROLS_PLAYER_2_LEFT
 		callMoveIfAvailable_Player1 LEFT
 		
 	JMP _label_checkAction_P1_finish
@@ -326,12 +358,14 @@ checkAction_Player1 PROC
 
 	_label_checkAction_P1_put_bomb:
 	
+		callSendByte CONTROLS_PLAYER_2_FIRE
 		CALL putBomb_Player1
 
 	JMP _label_checkAction_P1_finish
 	
 
 	_label_checkAction_P1_exit:
+		callSendByte F4_SCAN_CODE
 		MOV exitFlag , true
 
 	_label_checkAction_P1_finish:
@@ -345,9 +379,11 @@ checkAction_Player1 ENDP
 checkAction_Player2 PROC
 	PUSHA
 
-	callIsKeyPressed
-	JZ _label_checkAction_P1_finish
-	
+	callCheckIfReceived
+	JNC _label_checkAction_P2_finish
+
+	callGetReceivedByte
+	MOV AH , receivedByte
 
 	CMP AH , CONTROLS_PLAYER_2_UP
 	JE _label_checkAction_P2_up
@@ -411,6 +447,194 @@ checkAction_Player2 PROC
 	RET
 checkAction_Player2 ENDP
 
+
+startConnection PROC
+	PUSHA
+
+	callSetCursorPosition 26 , 8
+	callPrintString sendInvitationMessage
+
+	callSetCursorPosition 25 , 12
+	callPrintString receiveInvitationMessage
+
+	callSetCursorPosition 23 , 16
+	callPrintString returnToPreviousMenu
+
+	callSetCursorPosition 0 , 25 ; outside the screen to hide it
+
+	_label_startConnection_get_input:
+
+		callGetPressedKey
+		CMP AH , F1_SCAN_CODE
+		JE _label_send_invitation
+
+		CMP AH , F2_SCAN_CODE
+		JE _label_receive_invitation
+
+		CMP AH , F3_SCAN_CODE
+		JE _label_startConnection_exit_game
+
+		callSetCursorPosition 27 , 20
+		callPrintString validInputMessage
+		callSetCursorPosition 0 , 25 ; outside the screen to hide it
+
+	JMP _label_startConnection_get_input
+
+
+	_label_send_invitation:
+		callSendByte SEND_INVITATION
+
+		callSwitchToTextMode ; clear the screen
+		callSetCursorPosition 19 , 10
+		callPrintString waitingForResponse
+
+		; wait for other player to tell me he/she received the invitation
+		_label_wait_for_acknowledgement:
+			callCheckIfReceived
+		JNC _label_wait_for_acknowledgement
+
+		callGetReceivedByte ; received ACKNOWLEDGMENT
+
+		CALL sendPlayer1Name
+
+		_label_wait_for_response:
+			callCheckIfReceived
+		JNC _label_wait_for_response
+
+		callGetReceivedByte
+
+		CMP receivedByte , ACCEPT_INVITATION
+		JE _label_invitation_accepted
+		
+		CMP receivedByte , REJECT_INVITATION
+		JE _label_invitation_rejected
+
+		_label_invitation_accepted:
+			CALL receivePlayer2Name
+
+		JMP _label_startConnection_finished
+
+		_label_invitation_rejected:
+			callSetCursorPosition 13 , 13
+			callPrintString rejectionMessage
+			callDelayInSeconds 3
+		JMP _label_startConnection_exit_game
+
+
+	_label_receive_invitation:
+		callCheckIfReceived
+		JNC _label_receive_invitation
+
+		callGetReceivedByte
+		callSendByte ACKNOWLEDGMENT
+
+		CALL receivePlayer2Name
+
+		callSwitchToTextMode
+
+
+		callSetCursorPosition 28 , 10
+
+		callPrintString NamePlayer2
+		callPrintString playerWantsToConnectMessage
+
+		callSetCursorPosition 15 , 15
+		callPrintString acceptInvitationMessage
+
+		callSetCursorPosition 45 , 15
+		callPrintString rejectInvitationMessage
+		
+		callSetCursorPosition 0 , 25 ; outside the screen to hide it
+
+		_label_get_input:
+			callGetPressedKey
+
+			CMP AH , F1_SCAN_CODE
+			JE _label_accept_invitation
+
+			CMP AH , F2_SCAN_CODE
+			JE _label_reject_invitation
+
+			callSetCursorPosition 27 , 20
+			callPrintString validInputMessage
+			callSetCursorPosition 0 , 25 ; outside the screen to hide it
+		JMP _label_get_input
+
+		_label_accept_invitation:
+			callSendByte ACCEPT_INVITATION
+
+			CALL sendPlayer1Name
+
+			CALL swapPlayersPositions
+
+			JMP _label_startConnection_finished
+
+
+		_label_reject_invitation:
+			callSendByte REJECT_INVITATION
+			JMP _label_startConnection_exit_game
+
+
+	_label_startConnection_exit_game:
+		MOV exitFlag , true
+
+	_label_startConnection_finished:
+
+	POPA
+	RET
+startConnection ENDP
+
+
+swapPlayersPositions PROC
+
+	XCHG_MEMORY_WORD Player1.position_x , Player2.position_x
+	XCHG_MEMORY_WORD Player1.position_y , Player2.position_y
+
+	XCHG_MEMORY_WORD Player1.respawn_x , Player2.respawn_x
+	XCHG_MEMORY_WORD Player1.respawn_y , Player2.respawn_y
+
+	XCHG_MEMORY_BYTE Player1.name_position  , Player2.name_position
+	XCHG_MEMORY_BYTE Player1.lives_position , Player2.lives_position
+	XCHG_MEMORY_BYTE Player1.score_position , Player2.score_position
+
+	RET
+swapPlayersPositions ENDP
+
+
+receivePlayer2Name PROC
+	PUSHA
+
+	MOV DI , 0
+
+	_label_receivePlayer2Name_receive:
+		callCheckIfReceived
+	JNC _label_receivePlayer2Name_receive
+
+		callGetReceivedByte
+		MOV_MEMORY_BYTE DS:NamePlayer2[DI] , receivedByte
+		INC DI
+		CMP DI , 7
+	JNE _label_receivePlayer2Name_receive
+
+	POPA
+	RET
+receivePlayer2Name ENDP
+
+
+sendPlayer1Name PROC
+	PUSHA
+
+	MOV DI , 0
+
+	_label_sendPlayer1Name_send:
+		callSendByte DS:NamePlayer1[DI]
+		INC DI
+		CMP DI , 7
+	JNE _label_sendPlayer1Name_send
+
+	POPA
+	RET
+sendPlayer1Name ENDP
 
 
 printPlayersNames PROC
@@ -927,8 +1151,6 @@ moveIfAvailable_Player1 PROC
 	; Parameters:
 	; BP -> direction
 
-	callGetPressedKey ; Remove the pressed key from keyboard buffer
-
 	MOV BX , Player1.position_x
 	MOV AX , Player1.position_y
 	
@@ -1024,8 +1246,6 @@ moveIfAvailable_Player2 PROC
 
 	; Parameters:
 	; BP -> direction
-
-	callGetPressedKey ; Remove the pressed key from keyboard buffer
 
 	MOV BX , Player2.position_x
 	MOV AX , Player2.position_y
