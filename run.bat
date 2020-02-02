@@ -13,6 +13,7 @@ if exist inout.obj erase inout.obj
 if exist menu.obj erase menu.obj
 if exist game.obj erase game.obj
 if exist results.obj erase results.obj
+if exist serial.obj erase serial.obj
 
 if exist game.exe erase game.exe
 
@@ -44,8 +45,11 @@ masm results.asm /z /Zi /Zd /v > results.log ,results ;
 If not exist results.obj echo Assembling Failed , Check results.log for errors
 If not exist results.obj goto end
 
+masm serial.asm /z /Zi /Zd /v > serial.log ,serial ;
+If not exist serial.obj echo Assembling Failed , Check serial.log for errors
+If not exist serial.obj goto end
 
-link main.obj draw.obj welcome.obj inout.obj menu.obj game.obj results.obj > link.log ,game.exe,nul;
+link main.obj draw.obj welcome.obj inout.obj menu.obj game.obj results.obj serial.obj > link.log ,game.exe,nul;
 If not exist game.exe echo Linking Failed , Check link.log for errors
 If not exist game.exe goto end
 
