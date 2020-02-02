@@ -3,6 +3,10 @@
 .386 ; sets the instruction set of 80386 processor
 
 PUBLIC Game
+
+EXTRN NamePlayer1:BYTE
+EXTRN NamePlayer2:BYTE
+
 INCLUDE inout.inc
 INCLUDE draw.inc
 INCLUDE gameUtil.inc
@@ -75,6 +79,11 @@ INCLUDE const.inc
 	PowerUpFileHandle DW ?
 	PowerUpData DB IMAGE_WIDTH*IMAGE_HEIGHT dup(?)
 	
+	heartIconFilename DB "images\heartIco.img", 0
+	heartIconFileHandle DW ?
+	heartIconData DB IMAGE_WIDTH*IMAGE_HEIGHT dup(?)
+
+
 	bomb STRUC
 		bomb_x DW 0
 		bomb_y DW 0
@@ -98,6 +107,11 @@ INCLUDE const.inc
 		
 		lives DB 3
 		score DW 0
+
+		; Score bar variables
+		name_position DB ?
+		lives_position DB ?
+		score_position DB ?
 	Player ENDS
 
 	; Creating objects from the struct
@@ -175,6 +189,18 @@ Game PROC
 
 	callUpdateGrid Player2.position_x , Player2.position_y , P2
 	callDrawImage Player2.position_x , Player2.position_y , bomberManData
+
+	; The heart icons in the score bar
+	callDrawImage 96 , 0 , heartIconData
+	callSetCursorPosition 14 , 0
+	callPrintChar ':'
+
+	callDrawImage 288 , 0 , heartIconData
+	callSetCursorPosition 38 , 0
+	callPrintChar ':'
+
+	CALL printPlayersNames
+
 	GameLoop:
 		
 		CALL checkAction_Player1
@@ -194,6 +220,9 @@ Game PROC
 			JE _label_exit
 
 			DEC gameTimer
+			CALL printTime
+
+			CALL updateScoreBar
 
 			INC bomb1.counter
 			INC bomb2.counter
@@ -369,6 +398,63 @@ checkAction_Player2 ENDP
 
 
 
+printPlayersNames PROC
+	PUSH AX
+
+	MOV AL , Player1.name_position
+	callSetCursorPosition AL , 0
+	callPrintString NamePlayer1
+	ADD AL , 6
+	callSetCursorPosition AL , 0
+	callPrintChar ':'
+
+	MOV AL , Player2.name_position
+	callSetCursorPosition AL , 0
+	callPrintString NamePlayer2
+	ADD AL , 6
+	callSetCursorPosition AL , 0
+	callPrintChar ':'
+
+	POP AX
+	RET
+printPlayersNames ENDP
+
+
+updateScoreBar PROC
+
+	; Print Player1 score
+	callSetCursorPosition Player1.score_position , 0
+	callClearCharacters 4
+	callPrintNumber Player1.score
+
+	; Print Player1 lives
+	callSetCursorPosition Player1.lives_position , 0
+	callPrintNumber Player1.lives
+
+
+	; Print Player2 score
+	callSetCursorPosition Player2.score_position , 0
+	callClearCharacters 4
+	callPrintNumber Player2.score
+
+	; Print Player2 lives
+	callSetCursorPosition Player2.lives_position , 0
+	callPrintNumber Player2.lives
+
+	RET
+updateScoreBar ENDP
+
+printTime PROC
+
+	callSetCursorPosition 19 , 0
+
+	callClearCharacters 4
+    
+	callPrintNumber gameTimer
+
+	RET
+printTime ENDP
+
 explodeBlock PROC
 
 	; Parameters:
@@ -540,6 +626,11 @@ loadImages PROC
 	callLoadImageData PowerUpFileHandle , PowerUpData
 	callCloseFile PowerUpFileHandle
 	
+	; Load heart score bar icon
+	callOpenFile heartIconFilename , heartIconFileHandle
+	callLoadImageData heartIconFileHandle , heartIconData
+	callCloseFile heartIconFileHandle
+	
 	RET
 loadImages ENDP
 
@@ -663,6 +754,9 @@ initializeData PROC
 	MOV Player1.respawn_y , 128
 	MOV Player1.score , 0
 	MOV Player1.lives , 3
+	MOV Player1.name_position , 24
+	MOV Player1.lives_position , 39
+	MOV Player1.score_position , 31
 
 	; Player 2 Data
 	MOV Player2.position_x , 16
@@ -671,6 +765,9 @@ initializeData PROC
 	MOV Player2.respawn_y , 32
 	MOV Player2.score , 0
 	MOV Player2.lives , 3
+	MOV Player2.name_position , 0
+	MOV Player2.lives_position , 15
+	MOV Player2.score_position , 7
 
 	; Bomb Level
 	MOV bomb1.level , BOMB_LEVEL_1
