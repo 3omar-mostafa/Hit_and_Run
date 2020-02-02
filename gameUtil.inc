@@ -73,6 +73,17 @@ callExplodeBomb MACRO bomb , whoseBomb
 	POPA
 ENDM callExplodeBomb
 
+
+callTakePowerupIfAny_Player1 MACRO PowerupType
+	PUSH CX
+
+		MOV CL , PowerupType
+		CALL takePowerupIfAny_Player1
+
+	POP CX
+ENDM callTakePowerupIfAny_Player1
+
+
 callMoveIfAvailable_Player1 MACRO direction
 	PUSHA
 
@@ -81,6 +92,16 @@ callMoveIfAvailable_Player1 MACRO direction
 
 	POPA
 ENDM callMoveIfAvailable_Player1
+
+
+callTakePowerupIfAny_Player2 MACRO PowerupType
+	PUSH CX
+
+		MOV CL , PowerupType
+		CALL takePowerupIfAny_Player2
+
+	POP CX
+ENDM callTakePowerupIfAny_Player2
 
 
 callMoveIfAvailable_Player2 MACRO direction
