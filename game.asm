@@ -9,6 +9,19 @@ EXTRN NamePlayer2:BYTE
 
 EXTRN displayResults:NEAR
 
+EXTRN Chat:NEAR
+; Inline Chat Windows variables
+EXTRN windowOneStartX:BYTE
+EXTRN windowOneEndX:BYTE
+EXTRN windowOneStartY:BYTE
+EXTRN windowOneEndY:BYTE
+EXTRN WindowOneColor:BYTE
+EXTRN windowTwoStartX:BYTE
+EXTRN windowTwoEndX:BYTE
+EXTRN windowTwoStartY:BYTE
+EXTRN windowTwoEndY:BYTE
+EXTRN WindowTwoColor:BYTE
+
 INCLUDE inout.inc
 INCLUDE draw.inc
 INCLUDE gameUtil.inc
@@ -320,6 +333,8 @@ checkAction_Player1 PROC
 
 	CMP AH, F4_SCAN_CODE
 	JE _label_checkAction_P1_exit
+
+	CALL inlineChat
 	JMP _label_checkAction_P1_finish
 
 
@@ -402,6 +417,8 @@ checkAction_Player2 PROC
 
 	CMP AH, F4_SCAN_CODE
 	JE _label_checkAction_P2_exit
+
+	CALL inlineChat
 	JMP _label_checkAction_P2_finish
 	
 
@@ -872,6 +889,31 @@ loadImages PROC
 	
 	RET
 loadImages ENDP
+
+
+inlineChat PROC
+
+	; Prepare windows' sizes for the chatting
+	MOV windowOneStartX , 0
+	MOV windowOneEndX , 18
+	MOV windowOneStartY , 20
+	MOV windowOneEndY , 24
+	MOV WindowOneColor , 0
+
+	MOV windowTwoStartX , 21
+	MOV windowTwoEndX , 39
+	MOV windowTwoStartY , 20
+	MOV windowTwoEndY , 24
+	MOV WindowTwoColor , 0
+
+	; Separating column between the two chatting windows
+	callDrawColumnUp 02 , 12 , 154 , 160 , 200 
+
+	CALL Chat
+
+	RET
+inlineChat ENDP
+
 
 Player1Died PROC
 
