@@ -157,6 +157,9 @@ Game PROC
 			JE _label_exit
 
 			DEC gameTimer
+
+			INC bomb1.counter
+			INC bomb2.counter
 	_label_Game_loop_end:
 	CMP exitFlag , true
 	JNE GameLoop
@@ -222,6 +225,8 @@ checkAction_Player1 PROC
 
 	_label_checkAction_P1_put_bomb:
 	
+		CALL putBomb_Player1
+
 	JMP _label_checkAction_P1_finish
 	
 
@@ -293,6 +298,8 @@ checkAction_Player2 PROC
 
 	_label_checkAction_P2_put_bomb:
 
+		CALL putBomb_Player2
+	
 	JMP _label_checkAction_P2_finish
 
 	_label_checkAction_P2_exit:
@@ -418,8 +425,22 @@ moveIfAvailable_Player1 PROC
 	SHL DL , 1 ;shift to check if it's an unmovable place ( block or brick )
 	JC _label_moveIfAvailable_P1_not_move
 
+		; The bomb exists in the grid but we draw it only if the player moved
+		; in order not draw it above him
+		CMP bomb1.to_be_drawn , true
+		JE _label_moveIfAvailable_P1_draw_bomb
+
+			callClearBlock Player1.position_x , Player1.position_y
+			callUpdateGrid Player1.position_x , Player1.position_y , G
+
+		JMP _label_moveIfAvailable_P1_move
+		
+		_label_moveIfAvailable_P1_draw_bomb:
+			callDrawImage bomb1.bomb_x , bomb1.bomb_y , bombData
+			callUpdateGrid bomb1.bomb_x , bomb1.bomb_y , B1
+			MOV bomb1.to_be_drawn , false
+
 	_label_moveIfAvailable_P1_move:
-		callClearBlock Player1.position_x , Player1.position_y
 		MOV Player1.position_x , BX
 		MOV Player1.position_y , AX
 
@@ -429,6 +450,24 @@ moveIfAvailable_Player1 PROC
 	_label_moveIfAvailable_P1_not_move:
 	RET
 moveIfAvailable_Player1 ENDP
+
+
+putBomb_Player1 PROC
+
+	CMP bomb1.counter , BOMB_TIME_TO_EXPLODE ; can only add a single bomb
+	JB _label_putBomb_P1_finish
+	
+	MOV_MEMORY_WORD bomb1.bomb_x , Player1.position_x
+	MOV_MEMORY_WORD bomb1.bomb_y , Player1.position_y
+
+	MOV bomb1.to_be_drawn , true
+	MOV bomb1.counter , 0
+
+	callUpdateGrid Player1.position_x , Player1.position_y , P1_B1
+
+	_label_putBomb_P1_finish:
+	RET
+putBomb_Player1 ENDP
 
 
 moveIfAvailable_Player2 PROC
@@ -449,8 +488,22 @@ moveIfAvailable_Player2 PROC
 	SHL DL , 1 ;shift to check if it's an unmovable place ( block or brick )
 	JC _label_moveIfAvailable_P2_not_move
 	
+		; The bomb exists in the grid but we draw it only if the player moved
+		; in order not draw it above him
+		CMP bomb2.to_be_drawn , true
+		JE _label_moveIfAvailable_P2_draw_bomb
+
+			callClearBlock Player2.position_x , Player2.position_y
+			callUpdateGrid Player2.position_x , Player2.position_y , G
+
+		JMP _label_moveIfAvailable_P2_move
+		
+		_label_moveIfAvailable_P2_draw_bomb:
+			callDrawImage bomb2.bomb_x , bomb2.bomb_y , bombData
+			callUpdateGrid bomb2.bomb_x , bomb2.bomb_y , B2
+			MOV bomb2.to_be_drawn , false
+
 	_label_moveIfAvailable_P2_move:
-		callClearBlock Player2.position_x , Player2.position_y
 		MOV Player2.position_x , BX
 		MOV Player2.position_y , AX
 
@@ -460,5 +513,25 @@ moveIfAvailable_Player2 PROC
 	_label_moveIfAvailable_P2_not_move:
 	RET
 moveIfAvailable_Player2 ENDP
+
+
+putBomb_Player2 PROC
+
+	CMP bomb2.counter , BOMB_TIME_TO_EXPLODE ; can only add a single bomb
+	JB _label_putBomb_P2_finish
+	
+	MOV_MEMORY_WORD bomb2.bomb_x , Player2.position_x
+	MOV_MEMORY_WORD bomb2.bomb_y , Player2.position_y
+
+	MOV bomb2.to_be_drawn , true
+	MOV bomb2.counter , 0
+
+	callUpdateGrid Player2.position_x , Player2.position_y , P2_B2
+
+	_label_putBomb_P2_finish:
+	RET
+putBomb_Player2 ENDP
+
+
 
 END
