@@ -891,6 +891,54 @@ loadImages PROC
 loadImages ENDP
 
 
+playBombSound PROC NEAR
+	PUSHA
+
+	MOV DX , 2000       ; Number of times to repeat whole routine.
+
+	MOV BX , 1          ; Frequency value.
+
+	MOV AL , 10110110b  ; The Magic Number (use this binary number only)
+	OUT 43H , AL        ; Send it to the initializing port 43H Timer 2.
+
+	NEXT_FREQUENCY:     ; This is were we will jump back to 2000 times.
+
+		MOV AX , BX     ; Move our Frequency value into AX.
+
+		OUT 42h , AL    ; Send LSB to port 42h.
+		MOV AL , AH     ; Move MSB into AL  
+		OUT 42h , AL    ; Send MSB to port 42h.
+
+		IN  AL , 61H        ; Get current value of port 61H.
+		OR  AL , 00000011b  ; OR AL to this value, forcing first two bits high.
+		OUT 61h , AL        ; Copy it to port 61H of the PPI Chip
+                            ; to turn ON the speaker.
+
+		MOV CX , 100        ; Repeat loop 100 times
+		DELAY_LOOP:         ; Here is where we loop back too.
+		LOOP DELAY_LOOP     ; Jump repeatedly to DELAY_LOOP until CX = 0
+
+
+		INC BX  ; Incrementing the value of BX lowers 
+                ; the frequency each time we repeat the whole routine
+
+		DEC DX  ; Decrement repeat routine count
+
+	CMP DX , 0          ; Is DX (repeat count) = to 0
+	JNZ NEXT_FREQUENCY  ; If not jump to NEXT_FREQUENCY
+	                    ; and do whole routine again.
+	
+	                    ; Else DX = 0 time to turn speaker OFF
+
+	IN  AL , 61h        ; Get current value of port 61H.
+	AND AL , 11111100b  ; AND AL to this value, forcing first two bits low.
+	OUT 61h , AL        ; Copy it to port 61H of the PPI Chip
+
+	POPA
+	RET
+playBombSound ENDP
+
+
 inlineChat PROC
 
 	; Prepare windows' sizes for the chatting
@@ -1092,6 +1140,8 @@ explodeBomb PROC
 	; AX -> bomb_y
 	; CL -> BombLevel
 	; DL -> whoseBomb
+
+	CALL playBombSound
 
 	CMP CL , BOMB_LEVEL_2
 	JNE _label_explodeBomb_level1
