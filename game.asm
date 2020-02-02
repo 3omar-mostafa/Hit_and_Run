@@ -129,6 +129,7 @@ Game PROC
 		
 		CALL checkAction_Player1
 		CALL checkAction_Player2
+		callClearKeyboardBuffer
 	_label_Game_loop_end:
 	CMP exitFlag , true
 	JNE GameLoop

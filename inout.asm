@@ -13,6 +13,7 @@ PUBLIC setCursorPosition
 PUBLIC getCursorPosition
 PUBLIC isKeyPressed
 PUBLIC getPressedKey
+PUBLIC clearKeyboardBuffer
 PUBLIC printString
 PUBLIC switchToTextMode
 PUBLIC switchToGraphicsMode
@@ -69,6 +70,17 @@ isKeyPressed PROC
 	RET
 isKeyPressed ENDP
 
+
+clearKeyboardBuffer PROC
+	_label_clearKeyboardBuffer_clear:
+		CALL isKeyPressed
+		JZ _label_clearKeyboardBuffer_finish
+		CALL getPressedKey
+	JMP _label_clearKeyboardBuffer_clear
+	
+	_label_clearKeyboardBuffer_finish:
+	RET
+clearKeyboardBuffer ENDP
 
 
 ; string is printed at the current cursor position

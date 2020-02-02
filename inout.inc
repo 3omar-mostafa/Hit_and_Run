@@ -9,6 +9,7 @@ EXTRN setCursorPosition:NEAR
 EXTRN getCursorPosition:NEAR
 EXTRN getPressedKey:NEAR
 EXTRN isKeyPressed:NEAR
+EXTRN clearKeyboardBuffer:NEAR
 EXTRN printString:NEAR
 EXTRN switchToTextMode:NEAR
 EXTRN switchToGraphicsMode:NEAR
@@ -69,6 +70,14 @@ callIsKeyPressed MACRO
 
 ENDM callIsKeyPressed
 
+
+callClearKeyboardBuffer MACRO
+	PUSH AX
+
+	CALL clearKeyboardBuffer
+
+	POP AX
+ENDM callClearKeyboardBuffer
 
 ; string must be a memory location terminated with '$'
 ; string is printed at the current cursor position
