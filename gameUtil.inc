@@ -66,6 +66,7 @@ callExplodeBomb MACRO bomb , whoseBomb
 	MOV BX , bomb.bomb_x
 	MOV AX , bomb.bomb_y
 
+	MOV CL , bomb.level
 	MOV DL , whoseBomb
 
 	CALL explodeBomb

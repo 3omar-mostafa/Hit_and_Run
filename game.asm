@@ -38,6 +38,10 @@ INCLUDE const.inc
 
 	PLAYER_1_BOMB EQU 1
 	PLAYER_2_BOMB EQU 2
+
+	BOMB_LEVEL_1 EQU 1
+	BOMB_LEVEL_2 EQU 2
+
 	BOMB_TIME_TO_EXPLODE EQU 2
 
 	;Movement   dx , dy
@@ -67,12 +71,17 @@ INCLUDE const.inc
 	HPFileHandle DW ?
 	HPData DB IMAGE_WIDTH*IMAGE_HEIGHT dup(?)
 
+	PowerUpFilename DB "images\bombUp.img", 0
+	PowerUpFileHandle DW ?
+	PowerUpData DB IMAGE_WIDTH*IMAGE_HEIGHT dup(?)
+	
 	bomb STRUC
 		bomb_x DW 0
 		bomb_y DW 0
 
 		to_be_drawn DB false
 		counter DB BOMB_TIME_TO_EXPLODE + 1 ; count seconds passed after putting the bomb (used to know when to explode)
+		level DB BOMB_LEVEL_1
 	bomb ENDS
 
 	; Creating objects from the struct
@@ -112,8 +121,12 @@ INCLUDE const.inc
 
 	C EQU 00000010b ; 2 -> Coin powerup
 	H EQU 00000100b ; 4 -> Health powerup
+	P EQU 00001000b ; 8 -> Bomb powerup
+	
 	C_B EQU C OR B ; Coin powerup under the breakable block
 	H_B EQU H OR B ; Health powerup under the breakable block
+	P_B EQU P OR B ; Bomb powerup under the breakable block
+	
 	GRID_WIDTH EQU 20
 	GRID_HEIGHT EQU 9
 
@@ -127,7 +140,7 @@ INCLUDE const.inc
 	
 	;        0     1     2     3     4     5    6      7     8     9     10    11    12    13    14    15    16    17    18    19
 	grid DB  X  ,  X  ,  X  ,  X  ,  X  ,  X  ,  X  ,  X  ,  X  ,  X  ,  X  ,  X  ,  X  ,  X  ,  X  ,  X  ,  X  ,  X  ,  X  ,  X ; 0
-	     DB  X  ,  G  ,  G  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  X ; 1
+	     DB  X  ,  G  ,  G  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  , P_B ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  X ; 1
 	     DB  X  ,  G  ,  X  , C_B ,  X  ,  G  ,  X  ,  B  ,  X  ,  G  ,  G  ,  X  ,  B  ,  X  ,  G  ,  X  ,  B  ,  X  ,  G  ,  X ; 2
 	     DB  X  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  , C_B ,  B  , H_B ,  B  , C_B ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  B  ,  X ; 3
 	     DB  X  ,  G  ,  X  ,  B  ,  X  ,  G  ,  X  ,  B  ,  X  ,  G  ,  G  ,  X  ,  B  ,  X  ,  G  ,  X  ,  B  ,  X  ,  G  ,  X ; 4
@@ -418,6 +431,9 @@ drawBlockAfterExplosion PROC
 	
 	CMP CL , H  
 	JE _label_drawBlock_Heart
+	
+	CMP CL , P  
+	JE _label_drawBlock_Powerup_bomb
 
 	CMP CL , P1
 	JE _label_drawBlock_Player1
@@ -439,6 +455,10 @@ drawBlockAfterExplosion PROC
 		callDrawImage BX , AX , HPData
 	RET
 
+	_label_drawBlock_Powerup_bomb:
+		callDrawImage BX , AX , PowerUpData
+	RET
+	
 	_label_drawBlock_Player1:
 		CALL Player1Died
 	RET
@@ -515,6 +535,11 @@ loadImages PROC
 	callLoadImageData HPFileHandle , HPData
 	callCloseFile HPFileHandle
 	
+	; Load bomb powerup
+	callOpenFile PowerUpFilename , PowerUpFileHandle
+	callLoadImageData PowerUpFileHandle , PowerUpData
+	callCloseFile PowerUpFileHandle
+	
 	RET
 loadImages ENDP
 
@@ -537,7 +562,8 @@ Player1Died PROC
 		
 		MOV_MEMORY_WORD Player1.position_x , Player1.respawn_x
 		MOV_MEMORY_WORD Player1.position_y , Player1.respawn_y
-		
+		MOV bomb1.level , BOMB_LEVEL_1
+
 		callUpdateGrid Player1.position_x , Player1.position_y , P1
 		callDrawImage Player1.position_x , Player1.position_y , bomberManData
 
@@ -577,6 +603,7 @@ Player2Died PROC
 		
 		MOV_MEMORY_WORD Player2.position_x , Player2.respawn_x
 		MOV_MEMORY_WORD Player2.position_y , Player2.respawn_y
+		MOV bomb2.level , BOMB_LEVEL_1
 		
 		callUpdateGrid Player2.position_x , Player2.position_y , P2
 		callDrawImage Player2.position_x , Player2.position_y , bomberManData
@@ -645,6 +672,10 @@ initializeData PROC
 	MOV Player2.score , 0
 	MOV Player2.lives , 3
 
+	; Bomb Level
+	MOV bomb1.level , BOMB_LEVEL_1
+	MOV bomb2.level , BOMB_LEVEL_1
+
 	MOV gameTimer , 150
 	MOV exitFlag , false
 
@@ -657,44 +688,91 @@ initializeData ENDP
 ; 0 -> Bomb 
 ; B -> bomb_x , bomb_y
 ; x -> start_x , start_y of surrounding blocks
-; 0 , 1 , 2 , 3 , 4 are blocks which explode
+; 0 , 1 , 2 , 3 , 4 are blocks which explode in BOMB_LEVEL_1
+; 0 , 1 , 2 , 3 , 4 , 5 , 6 , 7 , 8 are blocks which explode in BOMB_LEVEL_2
 ;
-;         x------
-;         |     |
-;         |  4  |
-;   x-----B-----x------
-;   |  2  |  0  |  1  |
-;   ------x-----+------
-;         |  3  |
-;         |     |
-;         -------
+;                x______
+;                |     |
+;                |  8  |
+;                x-----+
+;                |     |
+;                |  4  |
+;    x-----x-----B-----x-----x------
+;    |  6  |  2  |  0  |  1  |  5  |
+;    ------+-----x-----+-----+------
+;                |  3  |
+;                |     |
+;                x-----+
+;                |  7  |
+;                |     |
+;                -------
 ;
 explodeBomb PROC
 
 	; Parameters:
 	; BX -> bomb_x
 	; AX -> bomb_y
+	; CL -> BombLevel
 	; DL -> whoseBomb
 
-	; The player put a bomb but did not move
-	callExplodeBlock DL ; Bomb's place (block 0)
-
-	ADD BX , BLOCK_WIDTH
-	callExplodeBlock DL ; Right (block 1)
-	SUB BX , BLOCK_WIDTH*2
-	callExplodeBlock DL ; Left (block 2)
+	CMP CL , BOMB_LEVEL_2
+	JNE _label_explodeBomb_level1
 	
-	ADD BX , BLOCK_WIDTH ; return to original position
+	; We check for grid boundary conditions in BOMB_LEVEL_2 only
+	; Because they are already handled in BOMB_LEVEL_1
+	; As there are unbreakable blocks (X) surrounding the grid
+	_label_explodeBomb_level2:
 
-	ADD AX , BLOCK_HEIGHT
-	callExplodeBlock DL ; Down (block 3)
-	SUB AX , BLOCK_HEIGHT*2
-	callExplodeBlock DL ; Up (block 4)
+		ADD BX , BLOCK_WIDTH*2
+		CMP BX , GRID_BOUNDARY_RIGHT
+		JE _label_skip_boundary_right
+			callExplodeBlock DL ; Right (block 5)
+		_label_skip_boundary_right:
 
-	ADD AX , BLOCK_HEIGHT ; return to original position
+		SUB BX , BLOCK_WIDTH*4
+		CMP BX , GRID_BOUNDARY_LEFT - BLOCK_WIDTH
+		JE _label_skip_boundary_left
+			callExplodeBlock DL ; Left (block 6)
+		_label_skip_boundary_left:
 
-	callUpdateGrid BX , AX , G
-	callClearBlock BX , AX
+		ADD BX , BLOCK_WIDTH*2 ; return to original position
+
+		ADD AX , BLOCK_HEIGHT*2
+		CMP AX , GRID_BOUNDARY_DOWN
+		JE _label_skip_boundary_down
+			callExplodeBlock DL ; Down (block 7)
+		_label_skip_boundary_down:
+
+		SUB AX , BLOCK_HEIGHT*4
+		CMP AX , GRID_BOUNDARY_UP - BLOCK_HEIGHT
+		JE _label_skip_boundary_up
+			callExplodeBlock DL ; Up (block 8)
+		_label_skip_boundary_up:
+
+		ADD AX , BLOCK_HEIGHT*2 ; return to original position
+		
+
+	_label_explodeBomb_level1:
+
+		; The player put a bomb but did not move
+		callExplodeBlock DL ; Bomb's place (block 0)
+
+		ADD BX , BLOCK_WIDTH
+		callExplodeBlock DL ; Right (block 1)
+		SUB BX , BLOCK_WIDTH*2
+		callExplodeBlock DL ; Left (block 2)
+		
+		ADD BX , BLOCK_WIDTH ; return to original position
+
+		ADD AX , BLOCK_HEIGHT
+		callExplodeBlock DL ; Down (block 3)
+		SUB AX , BLOCK_HEIGHT*2
+		callExplodeBlock DL ; Up (block 4)
+
+		ADD AX , BLOCK_HEIGHT ; return to original position
+
+		callUpdateGrid BX , AX , G
+		callClearBlock BX , AX
 	RET
 explodeBomb ENDP
 
@@ -711,6 +789,9 @@ takePowerupIfAny_Player1 PROC
 	CMP CL , H
 	JE _label_increment_lives_P1
 
+	CMP CL , P
+	JE _label_bomb_powerup_P1
+
 	RET
 
 	_label_increment_score1_P1:
@@ -720,6 +801,11 @@ takePowerupIfAny_Player1 PROC
 	_label_increment_lives_P1:
 		INC Player1.lives
 	RET
+
+	_label_bomb_powerup_P1:
+		MOV bomb1.level , BOMB_LEVEL_2
+	RET
+
 takePowerupIfAny_Player1 ENDP
 
 
@@ -800,6 +886,10 @@ takePowerupIfAny_Player2 PROC
 
 	CMP CL , H
 	JE _label_increment_lives_P2
+
+	CMP CL , P
+	JE _label_bomb_powerup_P2
+
 	RET
 
 	_label_increment_score2_P2:
@@ -809,6 +899,11 @@ takePowerupIfAny_Player2 PROC
 	_label_increment_lives_P2:
 		INC Player2.lives
 	RET
+
+	_label_bomb_powerup_P2:
+		MOV bomb2.level , BOMB_LEVEL_2
+	RET
+
 takePowerupIfAny_Player2 ENDP
 
 
