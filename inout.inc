@@ -150,3 +150,61 @@ callCloseFile MACRO fileHandle
 	POPA 
 ENDM callCloseFile
 
+
+; Memory Macros 
+; Same interface as Assembly instructions but for memory to memory operations
+
+MOV_MEMORY_WORD MACRO destination , source
+
+	PUSH source
+	POP destination
+
+ENDM MOV_MEMORY_WORD
+
+
+MOV_MEMORY_BYTE MACRO destination , source
+	PUSH AX
+
+	MOV AL , source
+	MOV destination , AL
+
+	POP AX
+ENDM MOV_MEMORY_BYTE
+
+
+
+XCHG_MEMORY_WORD MACRO var_1 , var_2
+
+	PUSH var_1
+	PUSH var_2
+
+	POP var_1
+	POP var_2
+
+ENDM XCHG_MEMORY_WORD
+
+
+XCHG_MEMORY_BYTE MACRO var_1 , var_2
+	PUSH AX
+
+	MOV AL , var_1
+	MOV AH , var_2
+
+	MOV var_1 , AH
+	MOV var_2 , AL
+	
+	POP AX
+ENDM XCHG_MEMORY_BYTE
+
+
+CMP_MEMORY MACRO var_1 , var_2
+	PUSH EAX
+	PUSH EBX
+
+	MOVZX EAX , var_1
+	MOVZX EBX , var_2
+	SUB EAX , EBX
+
+	POP EBX
+	POP EAX
+ENDM CMP_MEMORY
