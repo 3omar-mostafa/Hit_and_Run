@@ -27,8 +27,8 @@ INCLUDE serial.inc
 
 .DATA
 
-	MENU_IMAGE_WIDTH EQU 200
-	MENU_IMAGE_HEIGHT EQU 200
+	MENU_IMAGE_WIDTH EQU 280
+	MENU_IMAGE_HEIGHT EQU 140
 
 	menuFilename DB "images\menu.img", 0
 	menuFileHandle DW ?
@@ -46,16 +46,22 @@ MenuScreen PROC
 
 		callSwitchToGraphicsMode
 
-		callDrawLargeImage menuFileHandle , 60 , 0 , MENU_IMAGE_WIDTH , MENU_IMAGE_HEIGHT
+		callDrawLargeImage menuFileHandle , 20 , 20 , MENU_IMAGE_WIDTH , MENU_IMAGE_HEIGHT
 
 		_label_wait_for_valid_input:
 			callGetPressedKey
 
 			CMP AH , F1_SCAN_CODE
-			JE start_chatting
+			JE _label_start_chatting
 			
 			CMP AH , F2_SCAN_CODE
-			JE start_game
+			JE _label_start_game_split_screen
+			
+			CMP AH , F3_SCAN_CODE
+			JE _label_start_game_two_devices
+			
+			CMP AH , F4_SCAN_CODE
+			JE _label_show_instructions
 			
 			CMP AH , ESC_SCAN_CODE
 			JE _label_finish
@@ -63,15 +69,27 @@ MenuScreen PROC
 		JMP _label_wait_for_valid_input
 		
 		
-	start_chatting:
+	_label_start_chatting:
 		CALL prepareChat
 		CALL Chat
 	JMP _label_start_menu
 	
-	start_game:
+
+	_label_start_game_split_screen:
+
+	JMP _label_start_menu
+	
+
+	_label_start_game_two_devices:
 		CALL Game
 	JMP _label_start_menu
 	
+
+	_label_show_instructions:
+
+	JMP _label_start_menu
+
+
 	_label_finish:
 	callCloseFile menuFileHandle
 	RET
