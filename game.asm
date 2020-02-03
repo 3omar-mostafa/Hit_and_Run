@@ -82,20 +82,32 @@ INCLUDE const.inc
 	REJECT_INVITATION EQU 8
 
 
-	;Movement   dx , dy
-	UP      DW  0  , -16
-	DOWN    DW  0  ,  16
-	LEFT    DW -16 ,  0
-	RIGHT   DW  16 ,  0
+	;Movement   dx , dy  , corresponding imageData
+	UP      DW  0  , -16 , bomberManUpData
+	DOWN    DW  0  ,  16 , bomberManDownData
+	LEFT    DW -16 ,  0  , bomberManLeftData
+	RIGHT   DW  16 ,  0  , bomberManRightData
 
 	last_time DB ?
 	gameTimer DB 150
 
 	exitFlag DB false
 
-	bomberManFilename DB "images\bomber.img", 0
-	bomberManFileHandle DW ?
-	bomberManData DB IMAGE_WIDTH*IMAGE_HEIGHT dup(?)
+	bomberManUpFilename DB "images\bomberu.img", 0
+	bomberManUpFileHandle DW ?
+	bomberManUpData DB IMAGE_WIDTH*IMAGE_HEIGHT dup(?)
+	
+	bomberManDownFilename DB "images\bomberd.img", 0
+	bomberManDownFileHandle DW ?
+	bomberManDownData DB IMAGE_WIDTH*IMAGE_HEIGHT dup(?)
+	
+	bomberManLeftFilename DB "images\bomberl.img", 0
+	bomberManLeftFileHandle DW ?
+	bomberManLeftData DB IMAGE_WIDTH*IMAGE_HEIGHT dup(?)
+	
+	bomberManRightFilename DB "images\bomberr.img", 0
+	bomberManRightFileHandle DW ?
+	bomberManRightData DB IMAGE_WIDTH*IMAGE_HEIGHT dup(?)
 	
 	bombFilename DB "images\bomb.img", 0
 	bombFileHandle DW ?
@@ -226,10 +238,10 @@ Game PROC
 
 	; Put the players in their places
 	callUpdateGrid Player1.position_x , Player1.position_y , P1
-	callDrawImage Player1.position_x , Player1.position_y , bomberManData
+	callDrawImage Player1.position_x , Player1.position_y , bomberManDownData
 
 	callUpdateGrid Player2.position_x , Player2.position_y , P2
-	callDrawImage Player2.position_x , Player2.position_y , bomberManData
+	callDrawImage Player2.position_x , Player2.position_y , bomberManDownData
 
 	; The heart icons in the score bar
 	callDrawImage 96 , 0 , heartIconData
@@ -862,10 +874,25 @@ loadImages PROC
 	callLoadImageData bombFileHandle , bombData
 	callCloseFile bombFileHandle
 
-	; Load bomber man
-	callOpenFile bomberManFilename , bomberManFileHandle
-	callLoadImageData bomberManFileHandle , bomberManData
-	callCloseFile bomberManFileHandle
+	; Load bomber man up
+	callOpenFile bomberManUpFilename , bomberManUpFileHandle
+	callLoadImageData bomberManUpFileHandle , bomberManUpData
+	callCloseFile bomberManUpFileHandle
+
+	; Load bomber man down
+	callOpenFile bomberManDownFilename , bomberManDownFileHandle
+	callLoadImageData bomberManDownFileHandle , bomberManDownData
+	callCloseFile bomberManDownFileHandle
+
+	; Load bomber man left
+	callOpenFile bomberManLeftFilename , bomberManLeftFileHandle
+	callLoadImageData bomberManLeftFileHandle , bomberManLeftData
+	callCloseFile bomberManLeftFileHandle
+
+	; Load bomber man right
+	callOpenFile bomberManRightFilename , bomberManRightFileHandle
+	callLoadImageData bomberManRightFileHandle , bomberManRightData
+	callCloseFile bomberManRightFileHandle
 
 	; Load coin powerup
 	callOpenFile coinFilename , coinFileHandle
@@ -985,7 +1012,7 @@ Player1Died PROC
 		MOV bomb1.level , BOMB_LEVEL_1
 
 		callUpdateGrid Player1.position_x , Player1.position_y , P1
-		callDrawImage Player1.position_x , Player1.position_y , bomberManData
+		callDrawImage Player1.position_x , Player1.position_y , bomberManDownData
 
 		CMP DL , PLAYER_2_BOMB
 		JE _label_P1_Died_increase_P2_score
@@ -1026,7 +1053,7 @@ Player2Died PROC
 		MOV bomb2.level , BOMB_LEVEL_1
 		
 		callUpdateGrid Player2.position_x , Player2.position_y , P2
-		callDrawImage Player2.position_x , Player2.position_y , bomberManData
+		callDrawImage Player2.position_x , Player2.position_y , bomberManDownData
 
 		CMP DL , PLAYER_1_BOMB
 		JE _label_P2_Died_increase_P1_score
@@ -1248,6 +1275,7 @@ moveIfAvailable_Player1 PROC
 	
 	ADD BX , DS:[BP][0] ; x = x + deltaX (direction in x)
 	ADD AX , DS:[BP][2] ; y = y + deltaY (direction in y)
+	MOV SI , DS:[BP][4] ; SI -> proper image data for the movement
 
 	CALL getGridElementIndex
 	MOV DL , DS:grid[DI]
@@ -1275,10 +1303,12 @@ moveIfAvailable_Player1 PROC
 
 		callTakePowerupIfAny_Player1 DS:grid[DI]
 
-		callDrawImage Player1.position_x , Player1.position_y , bomberManData
 		callUpdateGrid Player1.position_x , Player1.position_y , P1
 
 	_label_moveIfAvailable_P1_not_move:
+		; Update The Player's image on the screen anyway
+		; Whatever the movement is done or not (Action Feedback)
+		callDrawImage Player1.position_x , Player1.position_y , DS:[SI]
 	RET
 moveIfAvailable_Player1 ENDP
 
@@ -1344,6 +1374,7 @@ moveIfAvailable_Player2 PROC
 	
 	ADD BX , DS:[BP][0] ; x = x + deltaX (direction in x)
 	ADD AX , DS:[BP][2] ; y = y + deltaY (direction in y)
+	MOV SI , DS:[BP][4] ; SI -> proper image data for the movement
 
 	CALL getGridElementIndex
 	MOV DL , DS:grid[DI]
@@ -1371,10 +1402,12 @@ moveIfAvailable_Player2 PROC
 
 		callTakePowerupIfAny_Player2 DS:grid[DI]
 
-		callDrawImage Player2.position_x , Player2.position_y , bomberManData
 		callUpdateGrid Player2.position_x , Player2.position_y , P2
 
 	_label_moveIfAvailable_P2_not_move:
+		; Update The Player's image on the screen anyway
+		; Whatever the movement is done or not (Action Feedback)
+		callDrawImage Player2.position_x , Player2.position_y , DS:[SI]
 	RET
 moveIfAvailable_Player2 ENDP
 
