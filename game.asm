@@ -3,6 +3,7 @@
 .386 ; sets the instruction set of 80386 processor
 
 PUBLIC Game
+PUBLIC isSplitScreenGame
 
 EXTRN NamePlayer1:BYTE
 EXTRN NamePlayer2:BYTE
@@ -78,6 +79,7 @@ INCLUDE const.inc
 	ACCEPT_INVITATION EQU 7
 	REJECT_INVITATION EQU 8
 
+	isSplitScreenGame DB false
 
 	;Movement   dx , dy  , corresponding imageData
 	UP      DW  0  , -16 , bomberManUpData
@@ -211,7 +213,6 @@ INCLUDE const.inc
 
 Game PROC
 
-	callSwitchToTextMode
 
 	backupGridData  ; Grid content is spoiled after the game
 	                ; Therefore changes that players made will remain in the next game
@@ -222,11 +223,18 @@ Game PROC
 
 	CALL loadImages
 	
-	CALL startConnection
+	CMP isSplitScreenGame , true
+	JE _label_skip_start_connection
 
-	CMP exitFlag , true
-	JE _label_exit
+		callSwitchToTextMode
+
+		CALL startConnection
+
+		CMP exitFlag , true
+		JE _label_exit
 	
+	_label_skip_start_connection:
+
 	callSwitchToGraphicsMode
 
 	callOpenFile gridFilename , gridFileHandle
@@ -323,7 +331,11 @@ checkAction_Player1 PROC
 	callIsKeyPressed
 	JZ _label_checkAction_P1_finish
 	
-	callGetPressedKey
+	; I do not remove the pressed key from the buffer here
+	; Because the player may be player 2 keys ( W , A , S , D , ...)
+	; And then this key will not match any of the comparisons here
+	; Therefore the key is removed wrongly
+	; The key is removed when there is a match (move / putting bomb)
 
 	CMP AH , CONTROLS_PLAYER_1_UP
 	JE _label_checkAction_P1_up
@@ -343,6 +355,10 @@ checkAction_Player1 PROC
 	CMP AH, F4_SCAN_CODE
 	JE _label_checkAction_P1_exit
 
+	; Inline Chatting is available only in two devices mode
+	CMP isSplitScreenGame , true
+	JE _label_checkAction_P1_finish
+
 	CALL inlineChat
 	JMP _label_checkAction_P1_finish
 
@@ -350,47 +366,72 @@ checkAction_Player1 PROC
 
 	_label_checkAction_P1_up:
 
-		callSendByte CONTROLS_PLAYER_2_UP
 		callMoveIfAvailable_Player1 UP
+		
+		CMP isSplitScreenGame , true
+		JE _label_checkAction_P1_finish
+
+		callSendByte CONTROLS_PLAYER_2_UP
 		
 	JMP _label_checkAction_P1_finish
 
 
 	_label_checkAction_P1_down:
 
-		callSendByte CONTROLS_PLAYER_2_DOWN
 		callMoveIfAvailable_Player1 DOWN
+		
+		CMP isSplitScreenGame , true
+		JE _label_checkAction_P1_finish
+
+		callSendByte CONTROLS_PLAYER_2_DOWN
 
 	JMP _label_checkAction_P1_finish
 
 
 	_label_checkAction_P1_right:
 
-		callSendByte CONTROLS_PLAYER_2_RIGHT
 		callMoveIfAvailable_Player1 RIGHT
+		
+		CMP isSplitScreenGame , true
+		JE _label_checkAction_P1_finish
+
+		callSendByte CONTROLS_PLAYER_2_RIGHT
 
 	JMP _label_checkAction_P1_finish
 
 
 	_label_checkAction_P1_left: 
 
-		callSendByte CONTROLS_PLAYER_2_LEFT
 		callMoveIfAvailable_Player1 LEFT
+		
+		CMP isSplitScreenGame , true
+		JE _label_checkAction_P1_finish
+
+		callSendByte CONTROLS_PLAYER_2_LEFT
 		
 	JMP _label_checkAction_P1_finish
 
 
 	_label_checkAction_P1_put_bomb:
-	
-		callSendByte CONTROLS_PLAYER_2_FIRE
+
 		CALL putBomb_Player1
+
+		CMP isSplitScreenGame , true
+		JE _label_checkAction_P1_finish
+
+		callSendByte CONTROLS_PLAYER_2_FIRE
 
 	JMP _label_checkAction_P1_finish
 	
 
 	_label_checkAction_P1_exit:
-		callSendByte F4_SCAN_CODE
 		MOV exitFlag , true
+		callGetPressedKey ; Remove the pressed key from keyboard buffer
+
+		CMP isSplitScreenGame , true
+		JE _label_checkAction_P1_finish
+
+		callSendByte F4_SCAN_CODE
 
 	_label_checkAction_P1_finish:
 	POPA
@@ -403,11 +444,30 @@ checkAction_Player1 ENDP
 checkAction_Player2 PROC
 	PUSHA
 
-	callCheckIfReceived
-	JNC _label_checkAction_P2_finish
+			
+	CMP isSplitScreenGame , true
+	JE _label_skip_receiving_action
 
-	callGetReceivedByte
-	MOV AH , receivedByte
+		callCheckIfReceived
+		JNC _label_checkAction_P2_finish
+
+		callGetReceivedByte
+		MOV AH , receivedByte
+
+	JMP _label_skip_checking_key
+
+	_label_skip_receiving_action:
+
+		callIsKeyPressed
+		JZ _label_checkAction_P2_finish
+
+		; I do not remove the pressed key from the buffer here
+		; Because the player may be player 1 keys ( up , down , left , right , ...)
+		; And then this key will not match any of the comparisons here
+		; Therefore the key is removed wrongly
+		; The key is removed when there is a match (move / putting bomb)
+
+	_label_skip_checking_key:
 
 	CMP AH , CONTROLS_PLAYER_2_UP
 	JE _label_checkAction_P2_up
@@ -426,6 +486,10 @@ checkAction_Player2 PROC
 
 	CMP AH, F4_SCAN_CODE
 	JE _label_checkAction_P2_exit
+
+	; Inline Chatting is available only in two devices mode
+	CMP isSplitScreenGame , true
+	JE _label_checkAction_P2_finish
 
 	CALL inlineChat
 	JMP _label_checkAction_P2_finish
@@ -467,6 +531,11 @@ checkAction_Player2 PROC
 
 	_label_checkAction_P2_exit:
 		MOV exitFlag , true
+		
+		CMP isSplitScreenGame , false
+		JE _label_checkAction_P2_finish
+
+		callGetPressedKey ; Remove the pressed key from keyboard buffer
 	
 	_label_checkAction_P2_finish:
 	POPA           
@@ -1267,6 +1336,13 @@ moveIfAvailable_Player1 PROC
 	; Parameters:
 	; BP -> direction
 
+	CMP isSplitScreenGame , false
+	JE _label_P1_move_skip_getting_key_buffer
+
+		callGetPressedKey ; Remove the pressed key from keyboard buffer
+
+	_label_P1_move_skip_getting_key_buffer:
+
 	MOV BX , Player1.position_x
 	MOV AX , Player1.position_y
 	
@@ -1311,6 +1387,13 @@ moveIfAvailable_Player1 ENDP
 
 
 putBomb_Player1 PROC
+
+	CMP isSplitScreenGame , false
+	JE _label_P1_bomb_skip_getting_key_buffer
+
+		callGetPressedKey ; Remove the pressed key from keyboard buffer
+
+	_label_P1_bomb_skip_getting_key_buffer:
 
 	CMP bomb1.counter , BOMB_TIME_TO_EXPLODE ; can only add a single bomb
 	JB _label_putBomb_P1_finish
@@ -1365,6 +1448,12 @@ moveIfAvailable_Player2 PROC
 
 	; Parameters:
 	; BP -> direction
+	CMP isSplitScreenGame , false
+	JE _label_P2_move_skip_getting_key_buffer
+
+		callGetPressedKey ; Remove the pressed key from keyboard buffer
+
+	_label_P2_move_skip_getting_key_buffer:
 
 	MOV BX , Player2.position_x
 	MOV AX , Player2.position_y
@@ -1410,6 +1499,13 @@ moveIfAvailable_Player2 ENDP
 
 
 putBomb_Player2 PROC
+
+	CMP isSplitScreenGame , false
+	JE _label_P2_bomb_skip_getting_key_buffer
+
+		callGetPressedKey ; Remove the pressed key from keyboard buffer
+
+	_label_P2_bomb_skip_getting_key_buffer:
 
 	CMP bomb2.counter , BOMB_TIME_TO_EXPLODE ; can only add a single bomb
 	JB _label_putBomb_P2_finish

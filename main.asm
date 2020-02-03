@@ -5,6 +5,10 @@
 PUBLIC NamePlayer1
 PUBLIC NamePlayer2
 
+PUBLIC displayReadNameHeader
+PUBLIC readSinglePlayerName
+PUBLIC readTwoPlayersNames
+
 ; This are external Procedures defined in other Assembly files
 ; The linker will join them
 EXTRN displayWelcomeScreen:NEAR
@@ -22,7 +26,9 @@ INCLUDE inout.inc
 
 	errorMessage DB "Please start your name with a letter",'$'
 	enterMessage DB "Please enter your name (Max of 6 Characters)",'$'
-	player1Message DB "Player Name : " , '$'
+	player1Message DB "Player 1 Name :" , '$'
+	player2Message DB "Player 2 Name :" , '$'
+	playerMessage DB "Player Name :" , '$'
 
 
 .CODE
@@ -31,13 +37,6 @@ Main PROC FAR
 	CALL initializeDataSegment
 
 	CALL displayWelcomeScreen
-
-	callSwitchToTextMode
-
-	callSetCursorPosition 18 , 5
-	callPrintString enterMessage
-
-	CALL readPlayer1Name
 
 	CALL MenuScreen
 	
@@ -64,31 +63,96 @@ exitProgram PROC
 exitProgram ENDP
 
 
-readPlayer1Name PROC
+displayReadNameHeader PROC
+	PUSHA
+
+	callSwitchToTextMode
+
+	callSetCursorPosition 18 , 5
+	callPrintString enterMessage
+
+	POPA
+	RET
+displayReadNameHeader ENDP
+
+
+
+readSinglePlayerName PROC
 	PUSHA
 
 	callSetCursorPosition 33 , 10
-	callPrintString player1Message
+	callPrintString playerMessage
 
-	_label_readPlayer1Name_loop:
+	_label_readSinglePlayerName_loop:
 
 		callSetCursorPosition 36 , 12
-		callClearCharacters NamePlayer2_length
+		callClearCharacters NamePlayer1_length
 
 		callReadString NamePlayer1
 
 		callIsLetter NamePlayer1[0]
-		JC _label_readPlayer1Name_finish
+		JC _label_readSinglePlayerName_finish
 
 		callSetCursorPosition 22 , 15
 		callPrintString errorMessage
 
-	JMP _label_readPlayer1Name_loop
+	JMP _label_readSinglePlayerName_loop
 	
-	_label_readPlayer1Name_finish:  
+	_label_readSinglePlayerName_finish:  
 	POPA
 	RET
-readPlayer1Name ENDP
+readSinglePlayerName ENDP
+
+
+
+readTwoPlayersNames PROC
+	PUSHA
+
+	_label_read_Player1_Name:
+
+		callSetCursorPosition 50 , 10
+		callPrintString player1Message
+
+		_label_Player1_verify_name_loop:
+
+			callSetCursorPosition 53 , 12
+			callClearCharacters NamePlayer1_length
+
+			callReadString NamePlayer1
+
+			callIsLetter NamePlayer1[0]
+			JC _label_read_Player2_Name
+
+			callSetCursorPosition 22 , 20
+			callPrintString errorMessage
+
+		JMP _label_Player1_verify_name_loop
+	
+
+	_label_read_Player2_Name:  
+
+		callSetCursorPosition 10 , 10
+		callPrintString player2Message
+
+		_label_Player2_verify_name_loop:
+
+			callSetCursorPosition 13 , 12
+			callClearCharacters NamePlayer2_length
+
+			callReadString NamePlayer2
+
+			callIsLetter NamePlayer2[0]
+			JC _label_readTwoPlayersNames_finish
+
+			callSetCursorPosition 22 , 20
+			callPrintString errorMessage
+
+		JMP _label_Player2_verify_name_loop
+	
+	_label_readTwoPlayersNames_finish:  
+	POPA
+	RET
+readTwoPlayersNames ENDP
 
 
 END Main

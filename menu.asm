@@ -6,7 +6,13 @@
 
 PUBLIC MenuScreen
 
+EXTRN displayReadNameHeader:NEAR
+EXTRN readSinglePlayerName:NEAR
+EXTRN readTwoPlayersNames:NEAR
+
 EXTRN Game:NEAR
+EXTRN isSplitScreenGame:BYTE
+
 EXTRN Chat:NEAR
 ; Chat Windows variables
 EXTRN windowOneStartX:BYTE
@@ -76,11 +82,19 @@ MenuScreen PROC
 	
 
 	_label_start_game_split_screen:
-
+		CALL displayReadNameHeader
+		CALL readTwoPlayersNames
+		
+		MOV isSplitScreenGame , true
+		CALL Game
 	JMP _label_start_menu
 	
 
 	_label_start_game_two_devices:
+		CALL displayReadNameHeader
+		CALL readSinglePlayerName
+
+		MOV isSplitScreenGame , false
 		CALL Game
 	JMP _label_start_menu
 	
