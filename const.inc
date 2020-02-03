@@ -26,3 +26,6 @@
 	BACK_SPACE_ASCII EQU 8
 	TAB_ASCII EQU 9
 
+; Other  Constants
+	true EQU 1
+	false EQU 0
