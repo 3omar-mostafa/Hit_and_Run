@@ -39,6 +39,22 @@ INCLUDE serial.inc
 	menuFilename DB "images\menu.img", 0
 	menuFileHandle DW ?
 
+	INSTRUCTIONS_IMAGE_WIDTH EQU 320
+	INSTRUCTIONS_IMAGE_HEIGHT EQU 200
+
+	instructions1Filename DB "images\instruc1.img" , 0
+	instructions1FileHandle DW ?
+	
+	instructions2Filename DB "images\instruc2.img" , 0
+	instructions2FileHandle DW ?
+
+	instructions3Filename DB "images\instruc3.img" , 0
+	instructions3FileHandle DW ?
+
+	instructions4Filename DB "images\instruc4.img" , 0
+	instructions4FileHandle DW ?
+
+
 .CODE
 
 
@@ -100,6 +116,28 @@ MenuScreen PROC
 	
 
 	_label_show_instructions:
+		callOpenFile instructions1Filename , instructions1FileHandle
+		callDrawLargeImage instructions1FileHandle , 0 , 0 , INSTRUCTIONS_IMAGE_WIDTH , INSTRUCTIONS_IMAGE_HEIGHT
+		callCloseFile instructions1FileHandle
+		callWaitForAnyKey
+
+
+		callOpenFile instructions2Filename , instructions2FileHandle
+		callDrawLargeImage instructions2FileHandle , 0 , 0 , INSTRUCTIONS_IMAGE_WIDTH , INSTRUCTIONS_IMAGE_HEIGHT
+		callCloseFile instructions2FileHandle
+		callWaitForAnyKey
+
+
+		callOpenFile instructions3Filename , instructions3FileHandle
+		callDrawLargeImage instructions3FileHandle , 0 , 0 , INSTRUCTIONS_IMAGE_WIDTH , INSTRUCTIONS_IMAGE_HEIGHT
+		callCloseFile instructions3FileHandle
+		callWaitForAnyKey
+
+
+		callOpenFile instructions4Filename , instructions4FileHandle
+		callDrawLargeImage instructions4FileHandle , 0 , 0 , INSTRUCTIONS_IMAGE_WIDTH , INSTRUCTIONS_IMAGE_HEIGHT
+		callCloseFile instructions4FileHandle
+		callWaitForAnyKey
 
 	JMP _label_start_menu
 
