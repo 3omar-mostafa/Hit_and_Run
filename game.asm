@@ -352,7 +352,7 @@ checkAction_Player1 PROC
 	CMP AH , CONTROLS_PLAYER_1_FIRE
 	JE _label_checkAction_P1_put_bomb
 
-	CMP AH, F4_SCAN_CODE
+	CMP AH, ESC_SCAN_CODE
 	JE _label_checkAction_P1_exit
 
 	; Inline Chatting is available only in two devices mode
@@ -431,7 +431,7 @@ checkAction_Player1 PROC
 		CMP isSplitScreenGame , true
 		JE _label_checkAction_P1_finish
 
-		callSendByte F4_SCAN_CODE
+		callSendByte ESC_SCAN_CODE
 
 	_label_checkAction_P1_finish:
 	POPA
@@ -484,7 +484,7 @@ checkAction_Player2 PROC
 	CMP AH , CONTROLS_PLAYER_2_FIRE
 	JE _label_checkAction_P2_put_bomb
 
-	CMP AH, F4_SCAN_CODE
+	CMP AH, ESC_SCAN_CODE
 	JE _label_checkAction_P2_exit
 
 	; Inline Chatting is available only in two devices mode
