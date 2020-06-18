@@ -92,19 +92,19 @@ INCLUDE const.inc
 
 	exitFlag DB false
 
-	bomberManUpFilename DB "images\bomberu.img", 0
+	bomberManUpFilename DB "images\bomber_U.img", 0
 	bomberManUpFileHandle DW ?
 	bomberManUpData DB IMAGE_WIDTH*IMAGE_HEIGHT dup(?)
 	
-	bomberManDownFilename DB "images\bomberd.img", 0
+	bomberManDownFilename DB "images\bomber_D.img", 0
 	bomberManDownFileHandle DW ?
 	bomberManDownData DB IMAGE_WIDTH*IMAGE_HEIGHT dup(?)
 	
-	bomberManLeftFilename DB "images\bomberl.img", 0
+	bomberManLeftFilename DB "images\bomber_L.img", 0
 	bomberManLeftFileHandle DW ?
 	bomberManLeftData DB IMAGE_WIDTH*IMAGE_HEIGHT dup(?)
 	
-	bomberManRightFilename DB "images\bomberr.img", 0
+	bomberManRightFilename DB "images\bomber_R.img", 0
 	bomberManRightFileHandle DW ?
 	bomberManRightData DB IMAGE_WIDTH*IMAGE_HEIGHT dup(?)
 	
