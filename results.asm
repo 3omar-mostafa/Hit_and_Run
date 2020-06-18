@@ -35,10 +35,10 @@ displayResults PROC
 	callSwitchToGraphicsMode ; To clear the screen
 	
 	CMP AL , AH
-	JB _label_player1_win
+	JG _label_player1_win
 	
 	CMP AL , AH
-	JG _label_player1_loses
+	JB _label_player1_loses
 	
 	CMP CX , DX
 	JG _label_player1_win
