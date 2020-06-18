@@ -59,6 +59,6 @@ link main.obj draw.obj welcome.obj inout.obj menu.obj game.obj results.obj seria
 If not exist game.exe echo Linking Failed , Check link.log for errors
 If not exist game.exe goto end
 
-game.exe
+echo Build Finished Successfully
 
 :end
