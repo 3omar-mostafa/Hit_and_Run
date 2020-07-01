@@ -1,0 +1,49 @@
+name: 8086 Assembly Pipeline
+
+on:
+  push:
+  pull_request:
+
+jobs:
+
+  build:
+    name: Build
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Downloading Build Tools (MASM , LINK)
+      shell: bash
+      run: |
+        curl.exe -L -o masm.exe "https://drive.google.com/uc?export=download&id=10Ugy88xtHzi_ocUPWH8QmiGRpUV3eJnT"
+        curl.exe -L -o link.exe "https://drive.google.com/uc?export=download&id=1KbSXSFzUudBQSvrWESGL0lh2Zzw58PXc"
+
+    - name: Installing DosBox
+      shell: powershell
+      # Installs Doxbox in the current directory by using '--installArgs /D=$pwd'
+      run: choco install dosbox --force --force-dependencies --installArgs /D=$pwd
+
+    - name: Building Project with DosBox
+      shell: powershell
+      run: |
+        Add-Content .\build.bat "`nexit"     # Adding exit command to the end of building to close dosbox, '`n' is a new line
+        # Starting dosbox with our specified commands, '| out-null' to wait for dosbox to close
+        .\dosbox.exe -c "mount c $(pwd)" -c "c:" -c "build" | out-null
+        
+        # Checks if 'game.exe' exists then build succeeded, otherwise it fails
+        if(Test-Path -LiteralPath 'game.exe' -PathType Leaf){
+            echo "Build Finished Successfully"
+        } else {
+            echo "Build Failed, Check logs for errors"
+            exit 1
+        }
+
+    - name: Uploading Logs
+      if: always()
+      continue-on-error: true
+      uses: actions/upload-artifact@v2
+      with:
+        name: Building Logs
+        path: ./*.log
